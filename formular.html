@@ -1,0 +1,1001 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Editor i Dokumenteve PDF dhe Excel</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<style>
+:root {
+  --main-bg: #181d23;
+  --card-bg: #232a34;
+  --accent: #1976d2;
+  --accent-dark: #0d47a1;
+  --accent-light: #42a5f5;
+  --primary: #263859;
+  --primary-dark: #1a2233;
+  --secondary: #374151;
+  --text: #e3e8ee;
+  --text-light: #b0b8c1;
+  --button-bg: linear-gradient(90deg, #1976d2 60%, #263859 100%);
+  --button-hover: linear-gradient(90deg, #263859 60%, #1976d2 100%);
+  --button-alt: linear-gradient(90deg, #232a34 60%, #1976d2 100%);
+  --shadow: 0 4px 32px rgba(25, 118, 210, 0.13);
+  --border: #263859;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;}
+body{
+  background: var(--main-bg);
+  padding:32px;
+  min-height:100vh;
+  color:var(--text);
+  transition:background 0.4s;
+  display:flex;
+  justify-content:center;
+  align-items:flex-start;
+}
+.container{
+  max-width:1100px;
+  margin:0 auto;
+  background:var(--card-bg);
+  border-radius:18px;
+  box-shadow:var(--shadow);
+  border:1.5px solid var(--border);
+  overflow:hidden;
+  width:100%;
+}
+.toolbar{
+  display:flex;
+  gap:14px;
+  flex-wrap:wrap;
+  padding:18px 28px;
+  background:var(--primary-dark);
+  align-items:center;
+  border-bottom:1.5px solid var(--border);
+  box-shadow:var(--shadow);
+  position:sticky;
+  top:0;
+  z-index:10;
+}
+.toolbar button,
+.toolbar label{
+  padding:12px 22px;
+  font-size:1rem;
+  border-radius:50px;
+  border:none;
+  cursor:pointer;
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:500;
+  transition:background 0.18s,box-shadow 0.18s, border 0.18s;
+  box-shadow:0 1px 4px #1976d21a;
+  background:var(--button-bg);
+  color:white;
+  border: 1.5px solid var(--border);
+}
+.toolbar .tool-button{
+  background:var(--button-bg);
+  color:white;
+  border: 1.5px solid var(--border);
+}
+.toolbar .tool-button.active{
+  background:var(--button-hover);
+  color:var(--accent-light);
+  border: 1.5px solid var(--accent-light);
+}
+.toolbar .btn{
+  background:var(--button-alt);
+  color:var(--accent-light);
+  border: 1.5px solid var(--accent);
+}
+.toolbar .btn:hover,
+.toolbar .tool-button:hover{
+  background:var(--button-hover);
+  color:#fff;
+  box-shadow:0 2px 10px #1976d22a;
+  border-color: var(--accent-light);
+}
+.file-name{
+  font-size:1rem;
+  font-weight:600;
+  max-width:160px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  color:var(--accent-light);
+  background:rgba(25,118,210,0.08);
+  padding:6px 14px;
+  border-radius:8px;
+  margin-left:8px;
+}
+input[type="file"]{
+  display:none;
+}
+.editor-container{
+  position:relative;
+  padding:32px 24px 32px 24px;
+  min-height:600px;
+  overflow:auto;
+  background:var(--main-bg);
+}
+.document-preview{
+  position:relative;
+  overflow:auto;
+  border:1.5px solid var(--border);
+  border-radius:14px;
+  background:var(--primary-dark);
+  padding:18px;
+  box-shadow:0 2px 12px #1976d21a;
+  min-height:480px;
+}
+/* Overlay drawing canvas above document content */
+#drawing-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+  z-index: 10;
+  pointer-events: none; /* default, enable on drawing */
+}
+.document-content{
+  width:100%;
+  min-height:100%;
+  position:relative;
+  padding:24px 10px;
+  text-align:center;
+  color:var(--accent-light);
+}
+.document-content h1{
+  font-size:2.2rem;
+  font-weight:700;
+  margin-bottom:12px;
+  color:var(--accent-light);
+}
+.document-content p{
+  font-size:1.15rem;
+  color:var(--text-light);
+}
+.signature-container,
+.draggable-text{
+  position:absolute;
+  cursor:move;
+  z-index:20;
+  background:rgba(35,42,52,0.95);
+  min-width:80px;
+  min-height:20px;
+  padding:2px 4px;
+  border-radius:8px;
+  border:1.5px dashed var(--accent);
+  font-size:1.05rem;
+  color:var(--accent-light);
+  box-shadow:0 1px 4px #1976d21a;
+  transition:border 0.2s,box-shadow 0.2s;
+}
+.signature-container {
+  background: transparent !important;
+  border: 1.5px dashed var(--accent);
+}
+.signature-container img{
+  max-width:100%;
+  max-height:100%;
+  pointer-events:none;
+  background: transparent;
+}
+.overlay{
+  position:fixed;top:0;left:0;width:100%;height:100%;
+  background:rgba(0,0,0,0.6);z-index:999;display:none;
+}
+.signature-pad{
+  position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:rgba(26,34,51,0.95);
+  padding:18px 24px;border-radius:14px;
+  box-shadow:0 0 24px #1976d22a;
+  z-index:1000;display:none;width:370px;
+}
+#signature-canvas{
+  width:100%;height:150px;
+  border:1.5px solid var(--accent);
+  border-radius:8px;
+  background:white;
+}
+.signature-pad h3{
+  color:var(--accent-light);
+  margin-bottom:10px;
+  font-size:1.2rem;
+}
+.signature-pad .btn{
+  margin:6px 4px 0 0;
+  background:var(--button-bg);
+  color:white;
+  border:none;
+  font-size:1rem;
+  border-radius:50px;
+  padding:8px 18px;
+}
+.signature-pad .btn:hover{
+  background:var(--button-hover);
+  filter:brightness(1.08);
+}
+::-webkit-scrollbar{width:10px;background:var(--primary-dark);}
+::-webkit-scrollbar-thumb{background:var(--accent);border-radius:8px;}
+@media (max-width:900px){
+  .container{max-width:98vw;}
+  .editor-container{padding:10px;}
+}
+@media (max-width:600px){
+  .toolbar{flex-direction:column;gap:10px;padding:10px 8px;}
+  .editor-container{padding:6px;}
+  .document-preview{padding:6px;}
+}
+@media print {
+  body, html {
+    background:white !important;
+    padding:0 !important;
+    margin:0 !important;
+    display:block !important;
+    width:100% !important;
+    height:100% !important;
+  }
+  .toolbar, .text-input-container, .overlay, .signature-pad, .container > .toolbar {
+    display:none !important;
+  }
+  .container{
+    box-shadow:none !important;
+    border:none !important;
+    width:100% !important;
+    max-width:100% !important;
+    margin:0 !important;
+    padding:0 !important;
+    background:white !important;
+  }
+  .editor-container{
+    padding:0 !important;
+    margin:0 !important;
+    background:white !important;
+    overflow:visible !important;
+    height:auto !important;
+  }
+  .document-preview{
+    position:relative !important;
+    width:100% !important;
+    height:auto !important;
+    margin:0 auto !important;
+    padding:10mm !important;
+    box-sizing:border-box !important;
+    background:white !important;
+    overflow:visible !important;
+    border:none !important;
+    box-shadow:none !important;
+    border-radius:0 !important;
+    page-break-inside:avoid !important;
+  }
+  #pdf-container, #excel-container, #uploaded-image {
+    width:100% !important;
+    height:auto !important;
+    display:block !important;
+  }
+  #pdf-container canvas {
+    width:100% !important;
+    height:auto !important;
+    max-width:100% !important;
+    page-break-inside:avoid !important;
+  }
+  .document-content {
+    display:none !important;
+  }
+  .signature-container,
+  .draggable-text {
+    display:block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background:transparent !important;
+    color:black !important;
+    page-break-inside:avoid !important;
+    border: 1px solid #000 !important;
+  }
+  .signature-container img {
+    background:transparent !important;
+    filter: brightness(0) contrast(100%);
+  }
+  #drawing-canvas {
+    display:none !important;
+  }
+  #drawing-canvas-print {
+    display: block !important;
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    z-index: 101 !important;
+    pointer-events: none !important;
+    background: transparent !important;
+  }
+}
+.tooltip {
+  position: relative;
+  display: inline-block;
+}
+.tooltip .tooltiptext {
+  visibility: hidden;
+  width: 140px;
+  background: var(--accent);
+  color: #fff;
+  text-align: center;
+  border-radius: 6px;
+  padding: 7px 0;
+  position: absolute;
+  z-index: 1;
+  bottom: 125%; left: 50%; transform: translateX(-50%);
+  opacity: 0; transition: opacity 0.2s;
+  font-size:0.95rem;
+  box-shadow:0 2px 8px #1976d21a;
+}
+.tooltip:hover .tooltiptext {visibility: visible;opacity: 1;}
+
+/* Text input styling */
+.text-input-container {
+  position: absolute;
+  z-index: 30;
+  background: rgba(35, 42, 52, 0.9);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 5px;
+  display: none;
+}
+.text-input {
+  background: transparent;
+  border: none;
+  color: var(--text);
+  font-size: 16px;
+  width: 200px;
+  outline: none;
+  padding: 5px;
+}
+
+/* Resize handle for signatures */
+.resize-handle {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: var(--accent);
+  border-radius: 50%;
+  bottom: -5px;
+  right: -5px;
+  cursor: nwse-resize;
+  z-index: 25;
+}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+</head>
+<body>
+<div class="container">
+<div class="toolbar">
+    <label class="btn tooltip" id="browse-btn"><i class="fas fa-folder-open"></i> Zgjidh Dokument
+      <input type="file" id="file-input" accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,application/vnd.ms-excel,.xls,image/jpeg,.jpg,image/png,.png,image/gif,.gif,image/bmp,.bmp,image/webp,.webp">
+      <span class="tooltiptext">Ngarko PDF, Excel ose Foto</span>
+    </label>
+    <span class="file-name" id="file-name">Asnjë dokument</span>
+    <button class="tool-button active tooltip" data-tool="select"><i class="fas fa-mouse-pointer"></i> Selekto
+      <span class="tooltiptext">Lëviz ose selekto elemente</span>
+    </button>
+    <button class="tool-button tooltip" data-tool="text"><i class="fas fa-font"></i> Tekst
+      <span class="tooltiptext">Shto tekst të lëvizshëm</span>
+    </button>
+    <button class="tool-button tooltip" data-tool="pen"><i class="fas fa-pen"></i> Laps
+      <span class="tooltiptext">Vizato me laps</span>
+    </button>
+    <button class="tool-button tooltip" data-tool="highlight"><i class="fas fa-highlighter"></i> Thekso
+      <span class="tooltiptext">Thekso pjesë të dokumentit</span>
+    </button>
+    <button class="tool-button tooltip" data-tool="eraser"><i class="fas fa-eraser"></i> Fshij
+      <span class="tooltiptext">Fshij vizatimet</span>
+    </button>
+    <button class="tool-button tooltip" data-tool="signature"><i class="fas fa-signature"></i> Nënshkrim
+      <span class="tooltiptext">Shto nënshkrim të lëvizshëm</span>
+    </button>
+    <button class="btn tooltip" id="save-btn"><i class="fas fa-save"></i> Ruaj
+      <span class="tooltiptext">Ruaj ndryshimet</span>
+    </button>
+    <button class="btn tooltip" id="reset-btn"><i class="fas fa-undo"></i> Rikthe
+      <span class="tooltiptext">Rikthe dokumentin</span>
+    </button>
+    <button class="btn tooltip" id="print-btn"><i class="fas fa-print"></i> Print Preview
+      <span class="tooltiptext">Shiko ose printo dokumentin</span>
+    </button>
+</div>
+
+<div class="editor-container">
+    <div class="document-preview" id="document-preview">
+        <div id="pdf-container"></div>
+        <div id="excel-container"></div>
+        <div class="document-content" id="document-content">
+            <i class="fas fa-file-alt" style="font-size:3.5rem;color:#1976d2;margin-bottom:18px;"></i>
+            <h1>Mirësevini</h1>
+            <p>Zgjidhni dokumentin për të filluar redaktimin.<br>
+            <span style="color:var(--accent-light);">Klikoni <b>Zgjidh Dokument</b> ose tërhiqni dokumentin këtu.</span>
+            </p>
+        </div>
+    </div>
+    <canvas id="drawing-canvas"></canvas>
+    <div class="text-input-container" id="text-input-container">
+        <input type="text" class="text-input" id="text-input" placeholder="Shkruaj tekstin këtu...">
+    </div>
+</div>
+
+<!-- Signature Modal -->
+<div class="overlay" id="overlay"></div>
+<div class="signature-pad" id="signature-pad">
+    <h3>Shto nënshkrimin</h3>
+    <canvas id="signature-canvas" width="350" height="150"></canvas>
+    <div style="text-align:center;margin-top:10px;">
+        <button class="btn" id="apply-signature">Shto</button>
+        <button class="btn" id="clear-signature">Pastro</button>
+        <button class="btn" id="cancel-signature">Anulo</button>
+    </div>
+</div>
+</div>
+
+<script>
+pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js';
+document.addEventListener('DOMContentLoaded',()=>{
+
+const fileInput=document.getElementById('file-input');
+const browseBtn=document.getElementById('browse-btn');
+const fileName=document.getElementById('file-name');
+const documentPreview=document.getElementById('document-preview');
+const pdfContainer=document.getElementById('pdf-container');
+const excelContainer=document.getElementById('excel-container');
+const documentContent=document.getElementById('document-content');
+const drawingCanvas=document.getElementById('drawing-canvas');
+const saveBtn=document.getElementById('save-btn');
+const resetBtn=document.getElementById('reset-btn');
+const printBtn=document.getElementById('print-btn');
+const toolButtons=document.querySelectorAll('.tool-button');
+const signaturePad=document.getElementById('signature-pad');
+const signatureCanvas=document.getElementById('signature-canvas');
+const applySignature=document.getElementById('apply-signature');
+const clearSignature=document.getElementById('clear-signature');
+const cancelSignature=document.getElementById('cancel-signature');
+const overlay=document.getElementById('overlay');
+const textInputContainer = document.getElementById('text-input-container');
+const textInput = document.getElementById('text-input');
+
+let currentFile=null,currentTool='select',isDrawing=false,lastX,lastY,sigDrawing=false,lastSigX,lastSigY;
+let textPosition = {x: 0, y: 0};
+let textInputActive = false; // Track if text input is active
+
+const ctx=drawingCanvas.getContext('2d');
+const sigCtx=signatureCanvas.getContext('2d');
+
+// Set signature canvas background to white for better contrast
+sigCtx.fillStyle = 'white';
+sigCtx.fillRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+sigCtx.strokeStyle = '#000';
+
+function resizeCanvas(){
+    // Set canvas size to match .document-preview inner size
+    const rect = documentPreview.getBoundingClientRect();
+    drawingCanvas.width = documentPreview.clientWidth;
+    drawingCanvas.height = documentPreview.clientHeight;
+    drawingCanvas.style.width = documentPreview.clientWidth + 'px';
+    drawingCanvas.style.height = documentPreview.clientHeight + 'px';
+    
+    // Redraw any existing content
+    redrawCanvasContent();
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Enable pointer events only when drawing/highlighting/erasing
+function updateCanvasPointerEvents() {
+  if (currentTool === 'pen' || currentTool === 'highlight' || currentTool === 'eraser') {
+    drawingCanvas.style.pointerEvents = 'auto';
+    drawingCanvas.style.display = 'block';
+  } else {
+    drawingCanvas.style.pointerEvents = 'none';
+    drawingCanvas.style.display = 'none';
+  }
+}
+
+toolButtons.forEach(button=>{
+    button.addEventListener('click',()=>{
+        currentTool=button.dataset.tool;
+        toolButtons.forEach(btn=>btn.classList.remove('active'));
+        button.classList.add('active');
+        updateCanvasPointerEvents();
+        
+        if(currentTool==='signature') {
+            openSignaturePad();
+        } else if(currentTool==='text') {
+            // Only activate text input mode, don't show input yet
+            textInputActive = true;
+            textInputContainer.style.display = 'none';
+        } else {
+            textInputActive = false;
+            textInputContainer.style.display = 'none';
+        }
+    });
+});
+// Initial pointer events state
+updateCanvasPointerEvents();
+
+// --- Mouse offset fix for drawing ---
+function getRelativeCoords(e, el) {
+    const rect = el.getBoundingClientRect();
+    let x, y;
+    if (e.touches && e.touches.length) {
+        x = e.touches[0].clientX - rect.left;
+        y = e.touches[0].clientY - rect.top;
+    } else {
+        x = e.clientX - rect.left;
+        y = e.clientY - rect.top;
+    }
+    return { x, y };
+}
+
+// Handle click events for text tool
+documentPreview.addEventListener('click', (e) => {
+    if (currentTool === 'text' && textInputActive) {
+        const coords = getRelativeCoords(e, documentPreview);
+        textPosition = {x: coords.x, y: coords.y};
+        showTextInput(coords.x, coords.y);
+        textInputActive = false; // Reset after showing input
+    }
+});
+
+function showTextInput(x, y) {
+    // Remove any previous text input field
+    if (activeTextInput) {
+        activeTextInput.remove();
+        activeTextInput = null;
+    }
+    textInputContainer.style.display = 'block';
+    textInputContainer.style.left = x + 'px';
+    textInputContainer.style.top = y + 'px';
+    textInput.focus();
+    activeTextInput = textInputContainer;
+}
+
+function setupTextInput() {
+    // Remove any existing active text input
+    if (activeTextInput) {
+        activeTextInput.remove();
+        activeTextInput = null;
+    }
+    textInput.value = '';
+    textInputContainer.style.display = 'none';
+    textInput.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+            addTextElement(textInput.value, textPosition.x, textPosition.y);
+            textInputContainer.style.display = 'none';
+        } else if (e.key === 'Escape') {
+            textInputContainer.style.display = 'none';
+        }
+    };
+    textInput.onblur = function() {
+        if (textInput.value.trim() !== '') {
+            addTextElement(textInput.value, textPosition.x, textPosition.y);
+        }
+        textInputContainer.style.display = 'none';
+    };
+}
+
+function addTextElement(text, x, y) {
+    if (!text.trim()) return;
+    // Remove any previous text input field
+    if (activeTextInput) {
+        activeTextInput.style.display = 'none';
+        activeTextInput = null;
+    }
+    const textDiv=document.createElement('div');
+    textDiv.className='draggable-text';
+    textDiv.innerText=text;
+    textDiv.style.left=x + 'px';
+    textDiv.style.top=y + 'px';
+    documentPreview.appendChild(textDiv);
+    makeDraggable(textDiv);
+}
+
+drawingCanvas.addEventListener('mousedown',e=>{
+    if(currentTool==='pen'||currentTool==='highlight'||currentTool==='eraser'){
+        isDrawing=true;
+        const coords = getRelativeCoords(e, drawingCanvas);
+        lastX=coords.x;lastY=coords.y;ctx.beginPath();ctx.moveTo(lastX,lastY);
+        if(currentTool==='pen') {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = varAccentLight();
+          ctx.lineWidth = 2;
+          ctx.globalAlpha = 1.0;
+        } else if(currentTool==='highlight') {
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = 'rgba(255,255,0,0.4)'; // yellow highlight
+          ctx.lineWidth = 18;
+          ctx.globalAlpha = 1.0;
+        } else if(currentTool==='eraser') {
+          ctx.globalCompositeOperation = 'destination-out';
+          ctx.strokeStyle = 'rgba(0,0,0,1)';
+          ctx.lineWidth = 18;
+          ctx.globalAlpha = 1.0;
+        }
+    }
+});
+drawingCanvas.addEventListener('mousemove',e=>{
+    if(!isDrawing) return;
+    const coords = getRelativeCoords(e, drawingCanvas);
+    ctx.lineTo(coords.x,coords.y);
+    ctx.stroke();
+    lastX=coords.x;lastY=coords.y;
+});
+drawingCanvas.addEventListener('mouseup',()=>{isDrawing=false;ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1.0;});
+drawingCanvas.addEventListener('mouseout',()=>{isDrawing=false;ctx.globalCompositeOperation='source-over';ctx.globalAlpha=1.0;});
+
+function varAccentLight() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--accent-light').trim() || '#42a5f5';
+}
+
+// --- Signature tool: make signature draggable and functional ---
+function openSignaturePad(){
+    signaturePad.style.display='block';overlay.style.display='block';
+    // Transparent background for signature
+    sigCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    sigCtx.strokeStyle = '#000';
+}
+applySignature.addEventListener('click',()=>{
+    // Create signature with transparent background
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = signatureCanvas.width;
+    tempCanvas.height = signatureCanvas.height;
+    const tempCtx = tempCanvas.getContext('2d');
+    // Transparent background
+    tempCtx.clearRect(0, 0, tempCanvas.width, tempCanvas.height);
+    // Draw only the signature (no fill)
+    tempCtx.drawImage(signatureCanvas, 0, 0);
+    // Convert to image with transparent background
+    const imgData = tempCanvas.toDataURL('image/png');
+    const sigDiv=document.createElement('div');
+    sigDiv.className='signature-container';
+    const img=document.createElement('img');
+    img.src=imgData;
+    img.style.background = 'transparent';
+    img.style.pointerEvents = 'none';
+    sigDiv.appendChild(img);
+    // Add resize handle
+    const resizeHandle = document.createElement('div');
+    resizeHandle.className = 'resize-handle';
+    sigDiv.appendChild(resizeHandle);
+    sigDiv.style.top='20px';
+    sigDiv.style.left='20px';
+    documentPreview.appendChild(sigDiv);
+    makeDraggableAndResizable(sigDiv);
+    signaturePad.style.display='none';overlay.style.display='none';
+});
+cancelSignature.addEventListener('click',()=>{signaturePad.style.display='none';overlay.style.display='none';});
+clearSignature.addEventListener('click',()=>{
+    sigCtx.clearRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+    sigCtx.strokeStyle = '#000';
+});
+
+signatureCanvas.addEventListener('mousedown',e=>{
+    sigDrawing=true;
+    const rect = signatureCanvas.getBoundingClientRect();
+    lastSigX=e.clientX - rect.left;
+    lastSigY=e.clientY - rect.top;
+});
+signatureCanvas.addEventListener('mousemove',e=>{
+    if(!sigDrawing)return;
+    const rect = signatureCanvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    sigCtx.beginPath();
+    sigCtx.lineWidth = 2;
+    sigCtx.lineCap = 'round';
+    sigCtx.moveTo(lastSigX, lastSigY);
+    sigCtx.lineTo(x, y);
+    sigCtx.stroke();
+    
+    lastSigX=x;
+    lastSigY=y;
+});
+signatureCanvas.addEventListener('mouseup',()=>sigDrawing=false);
+signatureCanvas.addEventListener('mouseout',()=>sigDrawing=false);
+
+function makeDraggableAndResizable(el){
+    let dragging=false, resizing=false, offsetX, offsetY;
+    el.addEventListener('mousedown',e=>{
+        if (e.target.classList.contains('resize-handle')) {
+            resizing = true;
+        } else if (currentTool === 'select') {
+            dragging=true;
+            // Use pageX/pageY for correct offset
+            const rect = el.getBoundingClientRect();
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+            el.style.border='2px dashed var(--accent)';
+        }
+    });
+    document.addEventListener('mousemove',e=>{
+        if(dragging) {
+            const rect=documentPreview.getBoundingClientRect();
+            el.style.left=(e.clientX-rect.left-offsetX+documentPreview.scrollLeft)+'px';
+            el.style.top=(e.clientY-rect.top-offsetY+documentPreview.scrollTop)+'px';
+        } else if(resizing) {
+            const rect = documentPreview.getBoundingClientRect();
+            const width = Math.max(80, e.clientX - rect.left - parseFloat(el.style.left));
+            const height = Math.max(40, e.clientY - rect.top - parseFloat(el.style.top));
+            const img = el.querySelector('img');
+            el.style.width = width + 'px';
+            if(img) {
+                img.style.width = width + 'px';
+                img.style.height = height + 'px';
+            }
+        }
+    });
+    document.addEventListener('mouseup',()=>{
+        dragging=false;
+        resizing=false;
+        el.style.border='1.5px dashed var(--accent)';
+    });
+}
+
+function makeDraggable(el){
+    let dragging=false,offsetX,offsetY;
+    el.addEventListener('mousedown',e=>{
+        if (currentTool === 'select') {
+            dragging=true;
+            offsetX=e.offsetX;
+            offsetY=e.offsetY;
+            el.style.border='2px dashed var(--accent)';
+        }
+    });
+    document.addEventListener('mousemove',e=>{
+        if(!dragging) return; 
+        const rect=documentPreview.getBoundingClientRect();
+        el.style.left=(e.clientX-rect.left-offsetX+documentPreview.scrollLeft)+'px';
+        el.style.top=(e.clientY-rect.top-offsetY+documentPreview.scrollTop)+'px';
+    });
+    document.addEventListener('mouseup',()=>{
+        dragging=false;
+        el.style.border='1.5px dashed var(--accent)';
+    });
+}
+
+// Print Preview A4 me margjina dhe fillim nga faqja e pare
+printBtn.addEventListener('click',()=>{
+    // Create a print version of the drawing canvas
+    let prevPrintImg = document.getElementById('drawing-canvas-print');
+    if(prevPrintImg) prevPrintImg.remove();
+    
+    if (drawingCanvas.width > 0 && drawingCanvas.height > 0) {
+        const img = document.createElement('img');
+        img.id = 'drawing-canvas-print';
+        img.src = drawingCanvas.toDataURL('image/png');
+        img.style.position = 'absolute';
+        img.style.left = '0';
+        img.style.top = '0';
+        img.style.width = '100%';
+        img.style.height = '100%';
+        img.style.zIndex = '101';
+        img.style.pointerEvents = 'none';
+        documentPreview.appendChild(img);
+    }
+    
+    window.scrollTo(0,0);
+    window.print();
+});
+
+window.onafterprint = function() {
+    // Remove print image after printing
+    let prevPrintImg = document.getElementById('drawing-canvas-print');
+    if(prevPrintImg) prevPrintImg.remove();
+};
+
+fileInput.addEventListener('change',e=>{if(e.target.files[0]) loadFile(e.target.files[0]);});
+
+function loadFile(file){
+    currentFile=file;
+    fileName.textContent=file.name;
+    const ext=file.name.split('.').pop().toLowerCase();
+    documentContent.style.display='none';
+    if(ext==='pdf'){loadPDF(file);}
+    else if(ext==='xls'||ext==='xlsx'){loadExcel(file);}
+    else if(['jpg','jpeg','png','gif','bmp','webp'].includes(ext)) { loadImage(file); }
+    else{alert('Format jo i suportuar');documentContent.style.display='block';}
+}
+
+function loadImage(file){
+    pdfContainer.style.display='none';
+    excelContainer.style.display='none';
+    documentContent.style.display='none';
+    // Remove previous image if any
+    let prevImg = document.getElementById('uploaded-image');
+    if(prevImg) prevImg.remove();
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = document.createElement('img');
+        img.id = 'uploaded-image';
+        img.src = e.target.result;
+        img.style.maxWidth = '100%';
+        img.style.maxHeight = '700px';
+        img.style.display = 'block';
+        img.style.margin = '0 auto';
+        img.style.position = 'relative';
+        img.style.zIndex = '1';
+        documentPreview.appendChild(img);
+        // Move drawing canvas above image
+        drawingCanvas.style.zIndex = '10';
+        drawingCanvas.style.display = 'block';
+        resizeCanvas();
+    };
+    reader.readAsDataURL(file);
+}
+
+function loadPDF(file){
+    pdfContainer.innerHTML='';pdfContainer.style.display='block';excelContainer.style.display='none';
+    const reader=new FileReader();
+    reader.onload=function(){
+        const typedarray=new Uint8Array(this.result);
+        pdfjsLib.getDocument({data: typedarray}).promise.then(pdf=>{
+            pdfContainer.innerHTML = '';
+            let renderPage = function(pageNum) {
+                pdf.getPage(pageNum).then(page=>{
+                    const scale=1.2;
+                    const viewport=page.getViewport({scale});
+                    const canvas=document.createElement('canvas');
+                    canvas.width=viewport.width;
+                    canvas.height=viewport.height;
+                    const ctx2=canvas.getContext('2d');
+                    page.render({canvasContext:ctx2,viewport}).promise.then(()=>{
+                        pdfContainer.appendChild(canvas);
+                        if(pageNum < pdf.numPages) renderPage(pageNum+1);
+                        resizeCanvas();
+                        drawingCanvas.style.zIndex = 10;
+                    });
+                });
+            };
+            renderPage(1);
+        }).catch(err => {
+            alert('PDF nuk mund të hapet: ' + err.message);
+            documentContent.style.display='block';
+        });
+    };
+    reader.onerror = function() {
+        alert('Gabim gjatë leximit të PDF.');
+        documentContent.style.display='block';
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+function loadExcel(file){
+    excelContainer.innerHTML='';excelContainer.style.display='block';pdfContainer.style.display='none';
+    const reader=new FileReader();
+    reader.onload=function(e){
+        const data=new Uint8Array(e.target.result);
+        const workbook=XLSX.read(data,{type:'array'});
+        workbook.SheetNames.forEach(function(sheetName){
+            const rowObj=XLSX.utils.sheet_to_row_object_array(workbook.Sheets[sheetName]);
+            if(rowObj.length>0){
+                const html=XLSX.utils.sheet_to_html(workbook.Sheets[sheetName]);
+                const div=document.createElement('div');
+                div.innerHTML=html;
+                excelContainer.appendChild(div);
+            }
+        });
+        resizeCanvas();
+    };
+    reader.readAsArrayBuffer(file);
+}
+
+// --- Save, Reset, Print Preview functionality ---
+saveBtn.addEventListener('click',()=>{
+    alert('Ruajtja e dokumentit është vetëm vizuale në këtë version.');
+});
+resetBtn.addEventListener('click',()=>{
+    ctx.clearRect(0,0,drawingCanvas.width,drawingCanvas.height);
+    document.querySelectorAll('.signature-container,.draggable-text').forEach(el=>el.remove());
+    let prevImg = document.getElementById('uploaded-image');
+    if(prevImg) prevImg.remove();
+    documentContent.style.display='block';
+    pdfContainer.innerHTML='';
+    excelContainer.innerHTML='';
+});
+
+// Store and redraw canvas content
+let canvasContent = [];
+
+function redrawCanvasContent() {
+    // This would need to be implemented to redraw saved drawing actions
+    // For simplicity, we're just clearing and starting fresh on resize
+    ctx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+}
+
+// --- Fix drawing canvas overlay for all content (always on top) ---
+documentPreview.appendChild(drawingCanvas); // Ensure drawingCanvas is always last child (on top)
+
+// --- Improved text tool: only one text field per click, moveable, and only one at a time ---
+let activeTextInput = null;
+
+function setupTextInput() {
+    // Remove any existing active text input
+    if (activeTextInput) {
+        activeTextInput.remove();
+        activeTextInput = null;
+    }
+    textInput.value = '';
+    textInputContainer.style.display = 'none';
+    textInput.onkeydown = function(e) {
+        if (e.key === 'Enter') {
+            addTextElement(textInput.value, textPosition.x, textPosition.y);
+            textInputContainer.style.display = 'none';
+        } else if (e.key === 'Escape') {
+            textInputContainer.style.display = 'none';
+        }
+    };
+    textInput.onblur = function() {
+        if (textInput.value.trim() !== '') {
+            addTextElement(textInput.value, textPosition.x, textPosition.y);
+        }
+        textInputContainer.style.display = 'none';
+    };
+}
+
+function showTextInput(x, y) {
+    // Remove any previous text input field
+    if (activeTextInput) {
+        activeTextInput.remove();
+        activeTextInput = null;
+    }
+    textInputContainer.style.display = 'block';
+    textInputContainer.style.left = x + 'px';
+    textInputContainer.style.top = y + 'px';
+    textInput.focus();
+    activeTextInput = textInputContainer;
+}
+
+function addTextElement(text, x, y) {
+    if (!text.trim()) return;
+    // Remove any previous text input field
+    if (activeTextInput) {
+        activeTextInput.style.display = 'none';
+        activeTextInput = null;
+    }
+    const textDiv=document.createElement('div');
+    textDiv.className='draggable-text';
+    textDiv.innerText=text;
+    textDiv.style.left=x + 'px';
+    textDiv.style.top=y + 'px';
+    documentPreview.appendChild(textDiv);
+    makeDraggable(textDiv);
+}
+
+// --- Always keep drawing canvas on top of all content ---
+function keepDrawingCanvasOnTop() {
+    if (drawingCanvas.parentNode === documentPreview) {
+        documentPreview.appendChild(drawingCanvas);
+    }
+}
+// Call after loading any file or adding/removing content
+const origLoadFile = loadFile;
+loadFile = function(file) {
+    origLoadFile(file);
+    setTimeout(keepDrawingCanvasOnTop, 10);
+};
+const origAddTextElement = addTextElement;
+addTextElement = function(text, x, y) {
+    origAddTextElement(text, x, y);
+    setTimeout(keepDrawingCanvasOnTop, 10);
+};
+// Also call after signature or image
+const origApplySignature = applySignature.onclick;
+applySignature.onclick = function() {
+    if (origApplySignature) origApplySignature();
+    setTimeout(keepDrawingCanvasOnTop, 10);
+};
+});
+</script>
+</body>
+</html>
