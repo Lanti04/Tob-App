@@ -230,9 +230,56 @@ input[type="file"]{
   .document-preview{padding:6px;}
 }
 @media (max-width:600px){
-  .toolbar{flex-direction:column;gap:10px;padding:10px 8px;}
-  .editor-container{padding:6px;}
-  .document-preview{padding:6px;}
+  .toolbar {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding: 0;
+    background: none;
+    border: none;
+    box-shadow: none;
+    position: static;
+    top: auto;
+    z-index: 10;
+  }
+  .toolbar .toolbar-inner {
+    display: none;
+    flex-direction: column;
+    background: var(--primary-dark);
+    position: absolute;
+    top: 48px;
+    left: 0;
+    width: 100vw;
+    z-index: 1001;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 16px #0002;
+    padding: 8px 0;
+  }
+  .toolbar.open .toolbar-inner {
+    display: flex;
+  }
+  .toolbar .toolbar-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--button-bg);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+    margin: 8px;
+    cursor: pointer;
+    z-index: 1002;
+  }
+  .toolbar > *:not(.toolbar-toggle):not(.toolbar-inner) {
+    display: none !important;
+  }
+}
+@media (min-width: 601px) {
+  .toolbar .toolbar-toggle { display: none !important; }
+  .toolbar .toolbar-inner { display: flex !important; flex-direction: row; position: static; width: auto; box-shadow: none; background: none; }
 }
 
 /* Print styles */
@@ -357,22 +404,24 @@ input[type="file"]{
 </head>
 <body>
 <div class="container">
-  <!-- Restore toolbar buttons for all main tools -->
   <div class="toolbar">
-    <label class="btn tooltip" id="browse-btn"><i class="fas fa-folder-open"></i> Hap
-      <input type="file" id="file-input" accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,application/vnd.ms-excel,.xls,image/jpeg,.jpg,image/png,.png,image/gif,.gif,image/bmp,.bmp,image/webp,.webp">
-      <span class="tooltiptext">Ngarko dokument</span>
-    </label>
-    <span class="file-name" id="file-name">Asnjë dokument</span>
-    <button class="tool-button active tooltip" data-tool="select"><i class="fas fa-mouse-pointer"></i> Selekto</button>
-    <button class="tool-button tooltip" data-tool="text"><i class="fas fa-font"></i> Tekst</button>
-    <button class="tool-button tooltip" data-tool="pen"><i class="fas fa-pen"></i> Laps</button>
-    <button class="tool-button tooltip" data-tool="highlight"><i class="fas fa-highlighter"></i> Thekso</button>
-    <button class="tool-button tooltip" data-tool="eraser"><i class="fas fa-eraser"></i> Fshij</button>
-    <button class="tool-button tooltip" data-tool="signature"><i class="fas fa-signature"></i> Nënshkrim</button>
-    <button class="btn tooltip" id="save-btn"><i class="fas fa-save"></i> Ruaj</button>
-    <button class="btn tooltip" id="reset-btn"><i class="fas fa-undo"></i> Rikthe</button>
-    <button class="btn tooltip" id="print-btn"><i class="fas fa-print"></i> Printo</button>
+    <button class="toolbar-toggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
+    <div class="toolbar-inner">
+      <label class="btn tooltip" id="browse-btn"><i class="fas fa-folder-open"></i> Hap
+        <input type="file" id="file-input" accept="application/pdf,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,.xlsx,application/vnd.ms-excel,.xls,image/jpeg,.jpg,image/png,.png,image/gif,.gif,image/bmp,.bmp,image/webp,.webp">
+        <span class="tooltiptext">Ngarko dokument</span>
+      </label>
+      <span class="file-name" id="file-name">Asnjë dokument</span>
+      <button class="tool-button active tooltip" data-tool="select"><i class="fas fa-mouse-pointer"></i> Selekto</button>
+      <button class="tool-button tooltip" data-tool="text"><i class="fas fa-font"></i> Tekst</button>
+      <button class="tool-button tooltip" data-tool="pen"><i class="fas fa-pen"></i> Laps</button>
+      <button class="tool-button tooltip" data-tool="highlight"><i class="fas fa-highlighter"></i> Thekso</button>
+      <button class="tool-button tooltip" data-tool="eraser"><i class="fas fa-eraser"></i> Fshij</button>
+      <button class="tool-button tooltip" data-tool="signature"><i class="fas fa-signature"></i> Nënshkrim</button>
+      <button class="btn tooltip" id="save-btn"><i class="fas fa-save"></i> Ruaj</button>
+      <button class="btn tooltip" id="reset-btn"><i class="fas fa-undo"></i> Rikthe</button>
+      <button class="btn tooltip" id="print-btn"><i class="fas fa-print"></i> Printo</button>
+    </div>
   </div>
 
   <div class="editor-container">
@@ -637,7 +686,41 @@ document.addEventListener('DOMContentLoaded', () => {
     ctx.stroke();
     lastX = coords.x; lastY = coords.y;
   });
-
+  // TOUCH EVENTS FOR DRAWING
+  drawingCanvas.addEventListener('touchstart', (e) => {
+    if (currentTool === 'pen' || currentTool === 'highlight' || currentTool === 'eraser') {
+      isDrawing = true;
+      const coords = getRelativeCoords(e, drawingCanvas);
+      lastX = coords.x; lastY = coords.y;
+      ctx.beginPath();
+      ctx.moveTo(lastX, lastY);
+      if (currentTool === 'pen') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = getComputedStyle(document.documentElement).getPropertyValue('--accent-light').trim() || '#42a5f5';
+        ctx.lineWidth = 2;
+        ctx.globalAlpha = 1.0;
+      } else if (currentTool === 'highlight') {
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = 'rgba(255,255,0,0.4)';
+        ctx.lineWidth = 18;
+        ctx.globalAlpha = 1.0;
+      } else if (currentTool === 'eraser') {
+        ctx.globalCompositeOperation = 'destination-out';
+        ctx.strokeStyle = 'rgba(0,0,0,1)';
+        ctx.lineWidth = 18;
+        ctx.globalAlpha = 1.0;
+      }
+    }
+    e.preventDefault();
+  }, {passive:false});
+  drawingCanvas.addEventListener('touchmove', (e) => {
+    if (!isDrawing) return;
+    const coords = getRelativeCoords(e, drawingCanvas);
+    ctx.lineTo(coords.x, coords.y);
+    ctx.stroke();
+    lastX = coords.x; lastY = coords.y;
+    e.preventDefault();
+  }, {passive:false});
   ['mouseup', 'mouseout', 'touchend', 'touchcancel'].forEach(ev => {
     drawingCanvas.addEventListener(ev, () => {
       isDrawing = false;
@@ -972,6 +1055,18 @@ document.addEventListener('DOMContentLoaded', () => {
     let prevPrintImg = document.getElementById('drawing-canvas-print');
     if(prevPrintImg) prevPrintImg.remove();
   };
+
+  // Mobile menu toggle
+  const toolbar = document.querySelector('.toolbar');
+  const toolbarToggle = document.querySelector('.toolbar-toggle');
+  toolbarToggle.addEventListener('click', () => {
+    toolbar.classList.toggle('open');
+  });
+  // Close menu when clicking outside or on a button
+  document.addEventListener('click', (e) => {
+    if (!toolbar.contains(e.target)) toolbar.classList.remove('open');
+    if (e.target.classList.contains('tool-button') || e.target.classList.contains('btn')) toolbar.classList.remove('open');
+  });
 });
 </script>
 </body>
