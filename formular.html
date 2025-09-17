@@ -269,12 +269,25 @@ input[type="file"]{
     margin: 0 2px;
     gap: 0;
     justify-content: center;
+    background: var(--button-bg);
+    color: white;
+    border: 1.5px solid var(--border);
+  }
+  .toolbar .tool-button.active {
+    background: var(--button-hover);
+    color: var(--accent-light);
+    border: 1.5px solid var(--accent-light);
+  }
+  .toolbar .btn {
+    background: var(--button-alt);
+    color: var(--accent-light);
+    border: 1.5px solid var(--accent);
   }
   .file-name {
     display: none;
   }
 }
-@media (max-width:600px) {
+@media (max-width: 600px) {
   .toolbar {
     height: 52px;
     min-height: 52px;
