@@ -946,6 +946,7 @@ document.addEventListener('DOMContentLoaded', () => {
     sigCtx.lineWidth = 2;
   }
 
+  // Mouse events
   signatureCanvas.addEventListener('mousedown', (e) => {
     sigDrawing = true;
     const rect = signatureCanvas.getBoundingClientRect();
@@ -963,7 +964,33 @@ document.addEventListener('DOMContentLoaded', () => {
     sigCtx.stroke();
     lastSigX = x; lastSigY = y;
   });
-  ['mouseup', 'mouseout', 'touchend', 'touchcancel'].forEach(ev => {
+  ['mouseup', 'mouseout'].forEach(ev => {
+    signatureCanvas.addEventListener(ev, () => { sigDrawing = false; });
+  });
+
+  // Touch events for iPad/finger/Pencil
+  signatureCanvas.addEventListener('touchstart', (e) => {
+    if (e.touches.length > 0) {
+      sigDrawing = true;
+      const rect = signatureCanvas.getBoundingClientRect();
+      lastSigX = e.touches[0].clientX - rect.left;
+      lastSigY = e.touches[0].clientY - rect.top;
+      sigCtx.beginPath();
+      sigCtx.moveTo(lastSigX, lastSigY);
+    }
+    e.preventDefault();
+  }, { passive: false });
+  signatureCanvas.addEventListener('touchmove', (e) => {
+    if (!sigDrawing || e.touches.length === 0) return;
+    const rect = signatureCanvas.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    const y = e.touches[0].clientY - rect.top;
+    sigCtx.lineTo(x, y);
+    sigCtx.stroke();
+    lastSigX = x; lastSigY = y;
+    e.preventDefault();
+  }, { passive: false });
+  ['touchend', 'touchcancel'].forEach(ev => {
     signatureCanvas.addEventListener(ev, () => { sigDrawing = false; });
   });
 
