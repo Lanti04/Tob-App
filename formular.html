@@ -308,9 +308,121 @@ input[type="file"]{
     padding: 0 6px;
   }
 }
-@media (min-width: 601px) {
+@media (max-width: 1024px) {
+  .toolbar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    z-index: 100;
+    background: var(--primary-dark);
+    border-bottom: 1.5px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 0;
+    height: 56px;
+    min-height: 56px;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+  }
+  .container {
+    padding-top: 56px !important;
+  }
+  .toolbar .toolbar-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: var(--button-bg);
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 1.5rem;
+    margin: 4px 8px 4px 8px;
+    cursor: pointer;
+    z-index: 1002;
+  }
+  .toolbar .toolbar-inner {
+    display: none;
+    flex-direction: column;
+    background: var(--primary-dark);
+    position: absolute;
+    top: 56px;
+    left: 0;
+    width: 100vw;
+    z-index: 1001;
+    border-radius: 0 0 12px 12px;
+    box-shadow: 0 4px 16px #0002;
+    padding: 8px 0;
+  }
+  .toolbar.open .toolbar-inner {
+    display: flex;
+  }
+  .toolbar > *:not(.toolbar-toggle):not(.toolbar-inner) {
+    display: none !important;
+  }
+  .file-name {
+    display: none;
+  }
+  .toolbar button,
+  .toolbar label {
+    min-width: 44px;
+    min-height: 44px;
+    font-size: 1.1rem;
+    border-radius: 12px;
+    margin: 4px 8px;
+    justify-content: flex-start;
+    width: 95vw;
+    max-width: 95vw;
+    padding: 0 10px;
+  }
+}
+@media (min-width: 1025px) {
+  .toolbar {
+    position: sticky;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 10;
+    background: var(--primary-dark);
+    border-bottom: 1.5px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 18px 28px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 14px;
+    align-items: center;
+    justify-content: flex-start;
+    height: auto;
+    min-height: unset;
+  }
   .toolbar .toolbar-toggle { display: none !important; }
-  .toolbar .toolbar-inner { display: flex !important; flex-direction: row; position: static; width: auto; box-shadow: none; background: none; }
+  .toolbar .toolbar-inner {
+    display: flex !important;
+    flex-direction: row;
+    position: static;
+    width: auto;
+    box-shadow: none;
+    background: none;
+    gap: 14px;
+    align-items: center;
+  }
+  .toolbar button,
+  .toolbar label {
+    min-width: 0;
+    min-height: 0;
+    font-size: 1rem;
+    border-radius: 50px;
+    margin: 0;
+    padding: 12px 22px;
+    width: auto;
+    max-width: none;
+    justify-content: center;
+  }
+  .file-name {
+    display: inline-block;
+  }
 }
 
 /* Print styles */
