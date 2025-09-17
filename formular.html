@@ -47,17 +47,25 @@ body{
   width: 100%;
 }
 .toolbar{
-  display:flex;
-  gap:14px;
-  flex-wrap:wrap;
-  padding:18px 28px;
-  background:var(--primary-dark);
-  align-items:center;
-  border-bottom:1.5px solid var(--border);
-  box-shadow:var(--shadow);
-  position:sticky;
-  top:0;
-  z-index:10;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  padding: 18px 28px;
+  background: var(--primary-dark);
+  align-items: center;
+  border-bottom: 1.5px solid var(--border);
+  box-shadow: var(--shadow);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.toolbar .toolbar-toggle { display: none; }
+.toolbar .toolbar-inner {
+  display: flex;
+  flex-direction: row;
+  gap: 14px;
+  align-items: center;
+  width: 100%;
 }
 .toolbar button,
 .toolbar label{
@@ -75,6 +83,8 @@ body{
   background:var(--button-bg);
   color:white;
   border: 1.5px solid var(--border);
+  min-width: 44px;
+  min-height: 44px;
 }
 .toolbar .tool-button{
   background:var(--button-bg);
@@ -324,6 +334,7 @@ input[type="file"]{
     flex-wrap: nowrap;
     justify-content: flex-start;
     align-items: center;
+    gap: 0;
   }
   .container {
     padding-top: 56px !important;
@@ -355,6 +366,7 @@ input[type="file"]{
     border-radius: 0 0 12px 12px;
     box-shadow: 0 4px 16px #0002;
     padding: 8px 0;
+    gap: 0;
   }
   .toolbar.open .toolbar-inner {
     display: flex;
