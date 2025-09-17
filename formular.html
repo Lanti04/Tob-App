@@ -739,6 +739,8 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         textArmed = false;
       }
+      // Always keep drawingCanvas visible and never clear it except on reset
+      drawingCanvas.style.display = 'block';
       updateCanvasPointerEvents();
     });
   });
@@ -1052,6 +1054,21 @@ document.addEventListener('DOMContentLoaded', () => {
      ----------------------- */
   function makeDraggableAndResizable(el) {
     let dragging = false, resizing = false, offsetX = 0, offsetY = 0;
+    // Helper to lock/unlock page scroll
+    function lockScroll() {
+      document.body.style.overscrollBehavior = 'contain';
+      document.body.style.touchAction = 'none';
+      window.addEventListener('wheel', preventDefault, { passive: false });
+      window.addEventListener('touchmove', preventDefault, { passive: false });
+    }
+    function unlockScroll() {
+      document.body.style.overscrollBehavior = '';
+      document.body.style.touchAction = '';
+      window.removeEventListener('wheel', preventDefault, { passive: false });
+      window.removeEventListener('touchmove', preventDefault, { passive: false });
+    }
+    function preventDefault(e) { e.preventDefault(); }
+
     // Mouse events
     el.addEventListener('mousedown', (ev) => {
       const target = ev.target;
@@ -1064,6 +1081,7 @@ document.addEventListener('DOMContentLoaded', () => {
         offsetY = ev.clientY - rect.top;
         el.style.border = '2px dashed var(--accent)';
       }
+      lockScroll();
       ev.stopPropagation();
     });
     document.addEventListener('mousemove', (ev) => {
@@ -1089,6 +1107,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('mouseup', () => {
       dragging = false; resizing = false;
       el.style.border = '1.5px dashed var(--accent)';
+      unlockScroll();
     });
     // Touch events
     el.addEventListener('touchstart', (ev) => {
@@ -1103,6 +1122,7 @@ document.addEventListener('DOMContentLoaded', () => {
         offsetY = touch.clientY - rect.top;
         el.style.border = '2px dashed var(--accent)';
       }
+      lockScroll();
       ev.stopPropagation();
     }, {passive:false});
     document.addEventListener('touchmove', (ev) => {
@@ -1130,6 +1150,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.addEventListener('touchend', () => {
       dragging = false; resizing = false;
       el.style.border = '1.5px dashed var(--accent)';
+      unlockScroll();
     });
   }
 
