@@ -46,7 +46,7 @@ body{
   overflow: hidden;
   width: 100%;
 }
-.toolbar{
+.toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
@@ -62,64 +62,60 @@ body{
 .toolbar .toolbar-toggle { display: none; }
 .toolbar .toolbar-inner {
   display: flex;
+  flex-wrap: wrap;
   flex-direction: row;
   gap: 14px;
   align-items: center;
   width: 100%;
 }
 .toolbar button,
-.toolbar label{
-  padding:12px 22px;
-  font-size:1rem;
-  border-radius:50px;
-  border:none;
-  cursor:pointer;
-  display:flex;
-  align-items:center;
-  gap:8px;
-  font-weight:500;
-  transition:background 0.18s,box-shadow 0.18s, border 0.18s;
-  box-shadow:0 1px 4px #1976d21a;
-  background:var(--button-bg);
-  color:white;
+.toolbar label {
+  padding: 12px 22px;
+  font-size: 1rem;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 500;
+  transition: background 0.18s, box-shadow 0.18s, border 0.18s;
+  box-shadow: 0 1px 4px #1976d21a;
+  background: var(--button-bg);
+  color: white;
   border: 1.5px solid var(--border);
   min-width: 44px;
   min-height: 44px;
 }
-.toolbar .tool-button{
-  background:var(--button-bg);
-  color:white;
-  border: 1.5px solid var(--border);
-}
-.toolbar .tool-button.active{
-  background:var(--button-hover);
-  color:var(--accent-light);
+.toolbar .tool-button.active {
+  background: var(--button-hover);
+  color: var(--accent-light);
   border: 1.5px solid var(--accent-light);
 }
-.toolbar .btn{
-  background:var(--button-alt);
-  color:var(--accent-light);
+.toolbar .btn {
+  background: var(--button-alt);
+  color: var(--accent-light);
   border: 1.5px solid var(--accent);
 }
 .toolbar .btn:hover,
-.toolbar .tool-button:hover{
-  background:var(--button-hover);
-  color:#fff;
-  box-shadow:0 2px 10px #1976d22a;
+.toolbar .tool-button:hover {
+  background: var(--button-hover);
+  color: #fff;
+  box-shadow: 0 2px 10px #1976d22a;
   border-color: var(--accent-light);
 }
-.file-name{
-  font-size:1rem;
-  font-weight:600;
-  max-width:160px;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  white-space:nowrap;
-  color:var(--accent-light);
-  background:rgba(25,118,210,0.08);
-  padding:6px 14px;
-  border-radius:8px;
-  margin-left:8px;
+.file-name {
+  font-size: 1rem;
+  font-weight: 600;
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--accent-light);
+  background: rgba(25,118,210,0.08);
+  padding: 6px 14px;
+  border-radius: 8px;
+  margin-left: 8px;
 }
 input[type="file"]{
   display:none;
@@ -299,23 +295,76 @@ input[type="file"]{
 }
 @media (max-width: 600px) {
   .toolbar {
-    height: 52px;
-    min-height: 52px;
-    padding: 0 1vw;
-  }
-  .container {
-    padding-top: 52px !important;
+    flex-wrap: wrap;
+    padding: 2px 1px;
+    gap: 2px;
   }
   .toolbar .toolbar-inner {
-    font-size: 0.95rem;
+    flex-wrap: wrap;
+    gap: 2px;
   }
   .toolbar button,
   .toolbar label {
-    font-size: 1rem;
+    padding: 6px 4px;
+    font-size: 0.92rem;
+    min-width: 32px;
+    min-height: 32px;
+    border-radius: 8px;
+    gap: 2px;
+  }
+  .file-name {
+    display: none;
+  }
+}
+@media (max-width: 1200px) {
+  .toolbar {
+    flex-wrap: wrap;
+    padding: 10px 8px;
+    gap: 8px;
+  }
+  .toolbar .toolbar-inner {
+    flex-wrap: wrap;
+    gap: 8px;
+    width: auto;
+  }
+  .toolbar button,
+  .toolbar label {
+    padding: 10px 12px;
+    font-size: 0.98rem;
     min-width: 40px;
     min-height: 40px;
-    border-radius: 10px;
-    padding: 0 6px;
+    border-radius: 18px;
+    gap: 6px;
+  }
+  .file-name {
+    max-width: 90px;
+    font-size: 0.95rem;
+    padding: 4px 8px;
+  }
+}
+@media (max-width: 800px) {
+  .toolbar {
+    flex-wrap: wrap;
+    padding: 6px 2px;
+    gap: 4px;
+  }
+  .toolbar .toolbar-inner {
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .toolbar button,
+  .toolbar label {
+    padding: 8px 8px;
+    font-size: 0.95rem;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 12px;
+    gap: 4px;
+  }
+  .file-name {
+    max-width: 60px;
+    font-size: 0.9rem;
+    padding: 2px 4px;
   }
 }
 @media (max-width: 1024px) {
