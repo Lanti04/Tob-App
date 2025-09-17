@@ -1034,10 +1034,12 @@ document.addEventListener('DOMContentLoaded', () => {
     signaturePad.style.display = 'none';
     overlay.style.display = 'none';
   });
-  overlay.addEventListener('click', () => {
-    signaturePad.style.display = 'none';
-    overlay.style.display = 'none';
-  });
+
+  // Remove overlay click-to-close for signature modal (only close via buttons)
+  // overlay.addEventListener('click', () => {
+  //   signaturePad.style.display = 'none';
+  //   overlay.style.display = 'none';
+  // });
 
   /* -----------------------
      Draggable / Resizable helpers
@@ -1084,6 +1086,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function makeDraggable(el) {
     let dragging = false, offsetX = 0, offsetY = 0;
+    // Mouse drag
     el.addEventListener('mousedown', (ev) => {
       dragging = true;
       offsetX = ev.offsetX;
@@ -1098,6 +1101,27 @@ document.addEventListener('DOMContentLoaded', () => {
       el.style.top = (ev.clientY - rect.top - offsetY + documentPreview.scrollTop) + 'px';
     });
     document.addEventListener('mouseup', () => {
+      dragging = false;
+      el.style.border = '1.5px dashed var(--accent)';
+    });
+    // Touch drag for mobile/tablet
+    el.addEventListener('touchstart', (ev) => {
+      dragging = true;
+      const touch = ev.touches[0];
+      const rect = el.getBoundingClientRect();
+      offsetX = touch.clientX - rect.left;
+      offsetY = touch.clientY - rect.top;
+      el.style.border = '2px dashed var(--accent)';
+      ev.stopPropagation();
+    }, {passive:false});
+    document.addEventListener('touchmove', (ev) => {
+      if (!dragging) return;
+      const touch = ev.touches[0];
+      const rect = documentPreview.getBoundingClientRect();
+      el.style.left = (touch.clientX - rect.left - offsetX + documentPreview.scrollLeft) + 'px';
+      el.style.top = (touch.clientY - rect.top - offsetY + documentPreview.scrollTop) + 'px';
+    }, {passive:false});
+    document.addEventListener('touchend', () => {
       dragging = false;
       el.style.border = '1.5px dashed var(--accent)';
     });
