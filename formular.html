@@ -833,7 +833,14 @@ document.addEventListener('DOMContentLoaded', () => {
     textDiv.innerText = text;
     textDiv.style.left = x + 'px';
     textDiv.style.top = y + 'px';
-    
+    textDiv.style.minWidth = '80px';
+    textDiv.style.minHeight = '20px';
+    textDiv.style.resize = 'none';
+    // Add resize handle
+    const handle = document.createElement('div');
+    handle.className = 'resize-handle';
+    textDiv.appendChild(handle);
+    // Remove button
     const removeBtn = document.createElement('button');
     removeBtn.innerHTML = '✖';
     removeBtn.title = 'Fshi';
@@ -849,9 +856,8 @@ document.addEventListener('DOMContentLoaded', () => {
     removeBtn.style.cursor = 'pointer';
     removeBtn.addEventListener('click', (ev) => { ev.stopPropagation(); textDiv.remove(); });
     textDiv.appendChild(removeBtn);
-
     documentPreview.appendChild(textDiv);
-    makeDraggable(textDiv);
+    makeDraggableAndResizable(textDiv);
   }
 
   /* -----------------------
@@ -1046,6 +1052,7 @@ document.addEventListener('DOMContentLoaded', () => {
      ----------------------- */
   function makeDraggableAndResizable(el) {
     let dragging = false, resizing = false, offsetX = 0, offsetY = 0;
+    // Mouse events
     el.addEventListener('mousedown', (ev) => {
       const target = ev.target;
       if (target.classList.contains('resize-handle')) {
@@ -1071,6 +1078,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const width = Math.max(80, ev.clientX - rect.left - left);
         const height = Math.max(40, ev.clientY - rect.top - top);
         el.style.width = width + 'px';
+        el.style.height = height + 'px';
         const img = el.querySelector('img');
         if (img) {
           img.style.width = width + 'px';
@@ -1082,50 +1090,50 @@ document.addEventListener('DOMContentLoaded', () => {
       dragging = false; resizing = false;
       el.style.border = '1.5px dashed var(--accent)';
     });
-  }
-
-  function makeDraggable(el) {
-    let dragging = false, offsetX = 0, offsetY = 0;
-    // Mouse drag
-    el.addEventListener('mousedown', (ev) => {
-      dragging = true;
-      offsetX = ev.offsetX;
-      offsetY = ev.offsetY;
-      el.style.border = '2px dashed var(--accent)';
-      ev.stopPropagation();
-    });
-    document.addEventListener('mousemove', (ev) => {
-      if (!dragging) return;
-      const rect = documentPreview.getBoundingClientRect();
-      el.style.left = (ev.clientX - rect.left - offsetX + documentPreview.scrollLeft) + 'px';
-      el.style.top = (ev.clientY - rect.top - offsetY + documentPreview.scrollTop) + 'px';
-    });
-    document.addEventListener('mouseup', () => {
-      dragging = false;
-      el.style.border = '1.5px dashed var(--accent)';
-    });
-    // Touch drag for mobile/tablet
+    // Touch events
     el.addEventListener('touchstart', (ev) => {
-      dragging = true;
-      const touch = ev.touches[0];
-      const rect = el.getBoundingClientRect();
-      offsetX = touch.clientX - rect.left;
-      offsetY = touch.clientY - rect.top;
-      el.style.border = '2px dashed var(--accent)';
+      const target = ev.target;
+      if (target.classList.contains('resize-handle')) {
+        resizing = true;
+      } else {
+        dragging = true;
+        const touch = ev.touches[0];
+        const rect = el.getBoundingClientRect();
+        offsetX = touch.clientX - rect.left;
+        offsetY = touch.clientY - rect.top;
+        el.style.border = '2px dashed var(--accent)';
+      }
       ev.stopPropagation();
     }, {passive:false});
     document.addEventListener('touchmove', (ev) => {
-      if (!dragging) return;
-      const touch = ev.touches[0];
-      const rect = documentPreview.getBoundingClientRect();
-      el.style.left = (touch.clientX - rect.left - offsetX + documentPreview.scrollLeft) + 'px';
-      el.style.top = (touch.clientY - rect.top - offsetY + documentPreview.scrollTop) + 'px';
+      if (dragging) {
+        const touch = ev.touches[0];
+        const rect = documentPreview.getBoundingClientRect();
+        el.style.left = (touch.clientX - rect.left - offsetX + documentPreview.scrollLeft) + 'px';
+        el.style.top = (touch.clientY - rect.top - offsetY + documentPreview.scrollTop) + 'px';
+      } else if (resizing) {
+        const touch = ev.touches[0];
+        const rect = documentPreview.getBoundingClientRect();
+        const left = parseFloat(el.style.left) || 0;
+        const top = parseFloat(el.style.top) || 0;
+        const width = Math.max(80, touch.clientX - rect.left - left);
+        const height = Math.max(40, touch.clientY - rect.top - top);
+        el.style.width = width + 'px';
+        el.style.height = height + 'px';
+        const img = el.querySelector('img');
+        if (img) {
+          img.style.width = width + 'px';
+          img.style.height = height + 'px';
+        }
+      }
     }, {passive:false});
     document.addEventListener('touchend', () => {
-      dragging = false;
+      dragging = false; resizing = false;
       el.style.border = '1.5px dashed var(--accent)';
     });
   }
+
+  // No longer needed: makeDraggable (all use makeDraggableAndResizable)
 
   /* -----------------------
      File loading
