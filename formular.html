@@ -607,6 +607,7 @@ input[type="file"]{
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
+<button id="back-home-btn" style="position:fixed;top:18px;left:18px;z-index:10000;padding:10px 22px;font-size:1.05rem;border-radius:24px;background:var(--button-alt);color:var(--accent-light);border:1.5px solid var(--accent);box-shadow:0 2px 10px #1976d22a;cursor:pointer;">Kthehu ne fillim</button>
 <div class="container">
   <div class="toolbar">
     <button class="toolbar-toggle" aria-label="Menu"><i class="fas fa-bars"></i></button>
@@ -1351,6 +1352,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!toolbar.contains(e.target)) toolbar.classList.remove('open');
     if (e.target.classList.contains('tool-button') || e.target.classList.contains('btn')) toolbar.classList.remove('open');
   });
+});
+</script>
+<script>
+// Back to home button
+document.getElementById('back-home-btn').addEventListener('click', function() {
+  window.location.href = 'intro.html';
 });
 </script>
 </body>
