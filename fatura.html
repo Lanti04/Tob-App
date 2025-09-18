@@ -1,0 +1,2920 @@
+    <!-- Moved misplaced @media print block into <style> in <head> below -->
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Professionelle Rechnung — Excel Import & Drucken/PDF</title>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @media print {
+            .client-address-vertical .client-address-row.invoice-meta .meta-nr {
+                display: none !important;
+            }
+            .client-address-vertical .client-address-row.invoice-meta .meta-datum span:first-child::before {
+                content: "                                                  "; /* 50 spaces */
+                white-space: pre;
+            }
+        }
+        :root {
+            --bg: linear-gradient(135deg, #e3f0ff 0%, #f8faff 100%);
+            --card: rgba(255,255,255,0.85);
+            --accent: #2563eb;
+            --accent2: #38bdf8;
+            --muted: #64748b;
+            --danger: #ef4444;
+            --success: #22c55e;
+            --border: #e0e7ef;
+            --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.10);
+        }
+
+        body {
+            font-family: 'Inter', 'Arial', sans-serif;
+            margin: 0;
+            background: var(--bg);
+            color: #222;
+            line-height: 1.5;
+            min-height: 100vh;
+        }
+        .topbar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 24px 10px 24px;
+            background: linear-gradient(90deg, #2563eb 0%, #38bdf8 100%);
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            box-shadow: var(--shadow);
+            box-sizing: border-box;
+            backdrop-filter: blur(8px);
+            margin-bottom: 0;
+        }
+        .brand {
+            font-weight: 800;
+            font-size: 22px;
+            text-align: center;
+            letter-spacing: 1px;
+            text-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .toolbar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+            flex-wrap: wrap;
+        }
+        .btn {
+            background: var(--accent);
+            border: none;
+            color: #fff;
+            padding: 10px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            transition: box-shadow 0.2s, background 0.2s;
+            box-shadow: 0 2px 8px rgba(37,99,235,0.08);
+            text-align: center;
+        }
+        .btn:hover {
+            background: var(--accent2);
+            box-shadow: 0 4px 16px rgba(37,99,235,0.12);
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto 0;
+            padding: 2px 0 0 0;
+        }
+        .card {
+            background: var(--card);
+            border-radius: 18px;
+            padding: 22px;
+            box-shadow: var(--shadow);
+            margin-bottom: 8px;
+            border: 1px solid var(--border);
+            backdrop-filter: blur(4px);
+        }
+        .container > .card:first-child {
+            margin-top: 0 !important;
+        }
+        .row {
+            display: flex;
+            gap: 24px;
+        }
+        .col {
+            flex: 1;
+        }
+        label.small {
+            font-size: 12px;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 600;
+        }
+        input[type="text"], input[type="number"], select, textarea {
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            width: 100%;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 13px;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background: rgba(255,255,255,0.95);
+        }
+        input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent2);
+            box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.15);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            background: rgba(255,255,255,0.98);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        th, td {
+            padding: 10px 8px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+        th {
+            background: linear-gradient(90deg, #e3f0ff 0%, #f8faff 100%);
+            font-weight: 700;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        #invoiceTable tbody tr.bold {
+            background: rgba(234,246,255,0.5) !important;
+        }
+        #invoiceTable tbody tr:not(.bold) {
+            background: #fff !important;
+            color: #222 !important;
+        }
+        /* Unified print and preview styles */
+        /* Unified print and preview styles: moved to @media print below */
+        @media print {
+    .client-address-vertical > div {
+        display: block !important;
+        visibility: visible !important;
+        height: auto !important;
+        color: #222 !important;
+    }
+            #invoiceTable, #invoiceTable th, #invoiceTable td {
+                border-radius: 0 !important;
+            }
+            /* All rows with a number in the first column get a lighter background than the first row */
+            #invoiceTable tbody tr:not(:first-child) td:first-child:not(:empty) {
+                background: #f7f7f7 !important;
+            }
+            html, body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                image-rendering: -webkit-optimize-contrast !important;
+                image-rendering: crisp-edges !important;
+                font-smooth: always !important;
+                -webkit-font-smoothing: antialiased !important;
+                -moz-osx-font-smoothing: grayscale !important;
+            }
+            .preview-content {
+                background: #fff !important;
+                width: 210mm !important;
+                min-height: 297mm !important;
+                padding: 18px !important;
+                border-radius: 18px !important;
+                overflow: visible !important;
+                box-sizing: border-box !important;
+                position: relative !important;
+                box-shadow: none !important;
+            }
+            #invoiceTable th, #invoiceTable td {
+                font-size: 13px !important;
+                border: 1.5px solid var(--border) !important;
+                background: #f6f9ff !important;
+                color: #000 !important;
+                image-rendering: -webkit-optimize-contrast !important;
+            }
+            #invoiceTable tbody tr {
+                background: transparent !important;
+            }
+            #invoiceTable tbody tr td, #invoiceTable tbody tr th {
+                background: transparent !important;
+            }
+            #invoiceTable tbody tr.bold:not(:first-child) {
+                background: #f2f2f2 !important;
+            }
+            .logo img {
+                image-rendering: -webkit-optimize-contrast !important;
+                image-rendering: crisp-edges !important;
+                filter: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #fff !important;
+                margin: 0 !important;
+            }
+            .container {
+                margin: 0 !important;
+                padding: 0 !important;
+                max-width: 210mm !important;
+            }
+            .card {
+                box-shadow: none !important;
+                border: none !important;
+                padding: 0 !important;
+                margin-bottom: 0 !important;
+            }
+            .invoice-header {
+                padding: 1mm !important;
+                margin-bottom: 1mm !important;
+            }
+            .invoice-header-part {
+                gap: 0.5mm !important;
+                padding: 1mm !important;
+            }
+            .company-part .address-title {
+                margin-bottom: 0.03mm !important;
+                font-size: 6px !important;
+                line-height: 0.9 !important;
+            }
+            .company-part .company-info > div:nth-child(1),
+            .company-part .company-info > div:nth-child(2) {
+                font-weight: bold !important;
+                font-size: 13px !important;
+                margin-bottom: 1px !important;
+                line-height: 1.1 !important;
+            }
+            .company-part .company-info > div:nth-child(3) {
+                font-size: 10px !important;
+                margin-bottom: 1px !important;
+                line-height: 1 !important;
+            }
+            .company-part .company-info > div:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)) {
+                font-size: 8px !important;
+                margin-bottom: 0.5px !important;
+                line-height: 1 !important;
+            }
+            .company-part .muted {
+                font-size: 6px !important;
+                margin-bottom: 0.05mm !important;
+                line-height: 1 !important;
+            }
+            .invoice-table-container {
+                max-height: none !important;
+                overflow: visible !important;
+                display: block !important;
+                margin: 0 !important;
+                border: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 5mm;
+            }
+            .preview-content {
+                padding: 5mm !important;
+            }
+            .invoice-table-container, .totals {
+                page-break-inside: auto !important;
+            }
+            .totals {
+                page-break-before: auto !important;
+                margin-top: 2mm !important;
+            }
+            .invoice-title {
+                margin: 0 !important;
+                padding: 0 !important;
+                font-weight: 700 !important;
+                font-size: 14px !important;
+                line-height: 1.2 !important;
+            }
+            .invoice-table-container table {
+                page-break-inside: auto !important;
+            }
+            .invoice-table-container tr {
+                page-break-inside: avoid !important;
+                page-break-after: auto !important;
+            }
+            #invoiceTable th:nth-child(1), #invoiceTable td:nth-child(1) { width: 40px !important; }
+            #invoiceTable th:nth-child(2), #invoiceTable td:nth-child(2) { width: 100px !important; }
+            #invoiceTable th:nth-child(3), #invoiceTable td:nth-child(3) { width: 100px !important; }
+            #invoiceTable th:nth-child(4), #invoiceTable td:nth-child(4) { width: auto !important; min-width: 200px !important; }
+            #invoiceTable th:nth-child(5), #invoiceTable td:nth-child(5) { width: 60px !important; }
+            #invoiceTable th:nth-child(6), #invoiceTable td:nth-child(6) { width: 60px !important; }
+            #invoiceTable th:nth-child(7), #invoiceTable td:nth-child(7) { width: 60px !important; }
+            #invoiceTable th:nth-child(8), #invoiceTable td:nth-child(8) { width: 60px !important; }
+        }
+        .notes-section {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(255,255,255,0.85);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            font-size: 12px;
+            box-shadow: var(--shadow);
+        }
+        #invoiceNotes {
+            min-height: 60px;
+            resize: vertical;
+            font-size: 9px;
+        }
+        .preview-content {
+            background: rgba(255,255,255,0.95);
+            width: 210mm;
+            min-height: 297mm;
+            padding: 18px;
+            border-radius: 18px;
+            overflow: auto;
+            box-sizing: border-box;
+            position: relative;
+            box-shadow: var(--shadow);
+        }
+        .btn.primary {
+            background: var(--accent2);
+            color: #fff;
+            border: none;
+            font-weight: 700;
+        }
+        .btn.success {
+            background: var(--success);
+            color: #fff;
+            border: none;
+            font-weight: 700;
+        }
+        .btn.warning {
+            background: #fbbf24;
+            color: #fff;
+            border: none;
+            font-weight: 700;
+        }
+        .btn.danger {
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            font-weight: 700;
+        }
+        .status-badge {
+            padding: 6px 14px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 700;
+            width: 120px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+            background: linear-gradient(90deg, #e3f0ff 0%, #f8faff 100%);
+            color: var(--accent);
+            box-shadow: var(--shadow);
+        }
+
+        .topbar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 18px;
+            background: linear-gradient(180deg, #154a9f, #0f3f8a);
+            color: white;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-sizing: border-box;
+        }
+
+        .brand {
+            font-weight: 700;
+            font-size: 18px;
+            text-align: center;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            max-width: 1200px;
+            flex-wrap: nowrap;
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, .12);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 14px;
+            transition: all 0.2s ease;
+            width: 120px;
+            height: 36px;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+
+        .btn.primary {
+            background: white;
+            color: var(--accent);
+            border: 0;
+            font-weight: 600;
+        }
+
+        .btn.success {
+            background: var(--success);
+            color: white;
+            border: 0;
+            font-weight: 600;
+        }
+
+        .btn.warning {
+            background: #ff9800;
+            color: white;
+            border: 0;
+            font-weight: 600;
+        }
+
+        .btn.danger {
+            background: var(--danger);
+            color: white;
+            border: 0;
+            font-weight: 600;
+        }
+
+        .container {
+            max-width: 1200px;
+        margin: 60px auto 16px;
+            padding: 10px;
+        }
+
+        .card {
+            background: var(--card);
+        border-radius: 8px;
+        padding: 12px;
+        box-shadow: 0 4px 12px rgba(9, 18, 28, .06);
+        margin-bottom: 16px;
+            border: 1px solid var(--border);
+        }
+
+        .row {
+            display: flex;
+            gap: 16px;
+        }
+
+        .col {
+            flex: 1;
+        }
+
+        label.small {
+            font-size: 10px;
+            color: var(--muted);
+            display: block;
+            margin-bottom: 4px;
+            font-weight: 600;
+        }
+
+        input[type="text"], input[type="number"], select, textarea {
+            padding: 6px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+            width: 100%;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 12px;
+            transition: border-color 0.2s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(11, 116, 222, 0.1);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 12px;
+        }
+
+        th, td {
+            padding: 4px;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        th {
+            background: #f6f9ff;
+            font-weight: 700;
+        }
+
+        .bold {
+            font-weight: bold;
+        }
+        #invoiceTable tbody tr.bold {
+            background: #f7fafd !important;
+        }
+        #invoiceTable tbody tr:not(.bold) {
+            background: #fff !important;
+        }
+        @media print {
+            #invoiceTable tbody tr.bold {
+                background: #f7fafd !important;
+            }
+            #invoiceTable tbody tr:not(.bold) {
+                background: #fff !important;
+            }
+        }
+
+        .invoice-header {
+            display: flex;
+            flex-direction: row;
+            justify-content: space-between;
+            align-items: flex-start;
+    gap: 4px;
+    background: var(--card);
+    border-radius: 6px;
+    box-shadow: none;
+    padding: 4px 6px 4px 6px;
+    border: 1px solid var(--border);
+    margin-bottom: 4px;
+    position: relative;
+    min-height: 20px;
+    transition: none;
+        
+        }
+
+        .invoice-header-part {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            justify-content: center;
+        min-width: 0;
+        padding: 0 4px;
+        }
+        /* Vertically align client address with company address */
+        .invoice-header-part:last-child {
+            justify-content: flex-start;
+            margin-top: 0;
+        }
+
+        .logo {
+            width: 220px;
+            min-width: 180px;
+            min-height: 120px;
+            max-height: 160px;
+            background: linear-gradient(135deg, #e3f0ff 0%, #f8faff 100%);
+                width: 249px;
+                min-width: 204px;
+                min-height: 136px;
+                max-height: 182px;
+            margin-bottom: 0;
+        border-radius: 4px;
+        margin-left: 0;
+        margin-top: 0;
+        overflow: hidden;
+        box-shadow: none;
+        
+        }
+
+        .logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transform: scale(1.03);
+            filter: drop-shadow(0 2px 6px #2563eb22);
+        
+        }
+
+        .muted {
+            color: var(--muted);
+            font-size: 8px;
+            margin-bottom: 1px;
+            line-height: 1.12;
+        }
+
+        .address-title {
+            font-weight: 800;
+            font-size: 13px;
+            color: var(--accent);
+        margin-bottom: 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        
+        }
+
+        .client-address-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+            margin-bottom: 0px;
+            min-width: 120px;
+            max-width: 220px;
+            word-break: break-word;
+        
+        }
+
+        .client-address-vertical > div {
+            display: block;
+            width: 100%;
+            font-size: 8px;
+            line-height: 1.12;
+            margin-bottom: 1px;
+            color: var(--muted);
+            font-family: inherit;
+        }
+
+        /* Bëje adresën e klientit fiks si të kompanisë */
+        .client-address-vertical {
+            display: flex;
+            flex-direction: column;
+            gap: 0px;
+            margin-bottom: 0px;
+            min-width: 120px;
+            max-width: 220px;
+            word-break: break-word;
+        }
+        .client-address-vertical .address-title {
+            font-weight: 800;
+            font-size: 13px;
+            color: var(--accent);
+            margin-bottom: 1px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+
+        .filters {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            align-items: flex-start;
+        }
+
+        .filter-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .totals {
+            margin-top: 16px;
+            text-align: right;
+        }
+
+        .totals div {
+            display: flex;
+            justify-content: flex-end;
+            padding: 4px 0;
+            font-size: 14px;
+            white-space: normal;
+        }
+
+        .right {
+            text-align: right;
+        }
+
+        .no-print {
+            display: flex;
+        }
+
+        .invoice-table-container {
+            max-height: 400px;
+            overflow: auto;
+            margin-bottom: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column-reverse;
+        }
+
+        .invoice-table-container table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        #invoiceTable th:nth-child(1), #invoiceTable td:nth-child(1) { /* Nr */
+            width: 40px;
+            min-width: 40px;
+        }
+        #invoiceTable th:nth-child(2), #invoiceTable td:nth-child(2) { /* LV */
+            width: 100px;
+            min-width: 100px;
+        }
+        #invoiceTable th:nth-child(3), #invoiceTable td:nth-child(3) { /* Pozition */
+            width: 100px;
+            min-width: 100px;
+        }
+        #invoiceTable th:nth-child(4), #invoiceTable td:nth-child(4) { /* Kurztext */
+            width: auto;
+            min-width: 200px;
+            max-width: 600px;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        #invoiceTable th:nth-child(5), #invoiceTable td:nth-child(5) { /* ME */
+            width: 60px;
+            min-width: 60px;
+            max-width: 60px;
+        }
+        #invoiceTable th:nth-child(6), #invoiceTable td:nth-child(6) { /* Menge */
+            width: 60px;
+            min-width: 60px;
+            max-width: 60px;
+        }
+        #invoiceTable th:nth-child(7), #invoiceTable td:nth-child(7) { /* E-Price */
+            width: 60px;
+            min-width: 60px;
+            max-width: 60px;
+        }
+        #invoiceTable th:nth-child(8), #invoiceTable td:nth-child(8) { /* Aufmaß */
+            width: 60px;
+            min-width: 60px;
+            max-width: 60px;
+        }
+        #invoiceTable th:nth-child(9), #invoiceTable td:nth-child(9) { /* Veprime */
+            width: 60px;
+            min-width: 60px;
+        }
+
+        #detailTable th:nth-child(1), #detailTable td:nth-child(1) { /* LV */
+            width: 100px;
+            min-width: 100px;
+        }
+        #detailTable th:nth-child(2), #detailTable td:nth-child(2) { /* Pozition */
+            width: 100px;
+            min-width: 100px;
+        }
+        #detailTable th:nth-child(3), #detailTable td:nth-child(3) { /* Kurztext */
+            width: auto;
+            min-width: 200px;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        #detailTable th:nth-child(4), #detailTable td:nth-child(4) { /* ME */
+            width: 60px;
+            min-width: 60px;
+        }
+        #detailTable th:nth-child(5), #detailTable td:nth-child(5) { /* Menge */
+            width: 60px;
+            min-width: 60px;
+        }
+        #detailTable th:nth-child(6), #detailTable td:nth-child(6) { /* E-Price */
+            width: 80px;
+            min-width: 80px;
+        }
+        #detailTable th:nth-child(7), #detailTable td:nth-child(7) { /* Aufmaß */
+            width: 80px;
+            min-width: 80px;
+        }
+        #detailTable th:nth-child(8), #detailTable td:nth-child(8) { /* Veprime */
+            width: 60px;
+            min-width: 60px;
+        }
+
+        .detail-actions {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 12px;
+            gap: 8px;
+        }
+
+        .detail-actions .btn {
+            font-size: 12px;
+            padding: 6px 10px;
+            width: auto;
+            height: auto;
+        }
+
+        .print-only {
+            display: none;
+        }
+
+        .invoice-preview {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .preview-content {
+            background: white;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 5mm;
+            border-radius: 8px;
+            overflow: auto;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5mm;
+        }
+
+        .preview-toolbar {
+            display: flex;
+            gap: 10px;
+        }
+
+        @media print {
+            html, body {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                image-rendering: -webkit-optimize-contrast !important;
+                image-rendering: crisp-edges !important;
+                font-smooth: always !important;
+                -webkit-font-smoothing: antialiased !important;
+                -moz-osx-font-smoothing: grayscale !important;
+            }
+            #invoiceTable th, #invoiceTable td {
+                font-size: 13px !important;
+                border: 1.5px solid var(--border) !important;
+                background: #f6f9ff !important;
+                color: #000 !important;
+                image-rendering: -webkit-optimize-contrast !important;
+            }
+            .logo img {
+                image-rendering: -webkit-optimize-contrast !important;
+                image-rendering: crisp-edges !important;
+                filter: none !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #fff;
+                margin: 0;
+            }
+            .container {
+                margin: 0;
+                padding: 0;
+                max-width: 210mm;
+            }
+            .card {
+                box-shadow: none;
+                border: none;
+                padding: 0;
+                margin-bottom: 0;
+            }
+            .invoice-header {
+                padding: 1mm;
+                margin-bottom: 1mm;
+            }
+            .invoice-header-part {
+                gap: 0.5mm !important;
+                padding: 1mm !important;
+            }
+            .company-part .address-title {
+                margin-bottom: 0.03mm !important;
+                font-size: 6px !important;
+                line-height: 0.9 !important;
+            }
+            .company-part .company-info > div:nth-child(1),
+            .company-part .company-info > div:nth-child(1),
+            .company-part .company-info > div:nth-child(2) {
+                font-weight: bold !important;
+                font-size: 13px !important;
+                margin-bottom: 1px !important;
+                line-height: 1.1 !important;
+            }
+            .company-part .company-info > div:nth-child(3) {
+                font-size: 10px !important;
+                margin-bottom: 1px !important;
+                line-height: 1 !important;
+            }
+            .company-part .company-info > div:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)) {
+                font-size: 8px !important;
+                margin-bottom: 0.5px !important;
+                line-height: 1 !important;
+            }
+            .company-part .company-info > div:not(:nth-child(1)):not(:nth-child(2)):not(:nth-child(3)) {
+                margin-bottom: 0.05mm !important;
+                font-size: 7px !important;
+                line-height: 1 !important;
+            }
+            .company-part .muted {
+                font-size: 6px !important;
+                margin-bottom: 0.05mm !important;
+                line-height: 1 !important;
+            }
+            .invoice-table-container {
+                max-height: none;
+                overflow: visible;
+                display: block;
+                margin: 0;
+                border: none;
+            }
+            .print-only {
+                display: block;
+            }
+            @page {
+                size: A4 portrait;
+                margin: 5mm;
+            }
+            .preview-content {
+                padding: 5mm;
+            }
+            .invoice-table-container, .totals {
+                page-break-inside: auto;
+            }
+            .totals {
+                page-break-before: auto;
+                margin-top: 2mm;
+            }
+            .invoice-title {
+                margin: 0;
+                padding: 0;
+                font-weight: 700;
+                font-size: 14px;
+                line-height: 1.2;
+            }
+            .invoice-table-container table {
+                page-break-inside: auto;
+            }
+            .invoice-table-container tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            #invoiceTable th:nth-child(1), #invoiceTable td:nth-child(1) { /* Nr */
+                width: 40px;
+            }
+            #invoiceTable th:nth-child(2), #invoiceTable td:nth-child(2) { /* LV */
+                width: 100px;
+            }
+            #invoiceTable th:nth-child(3), #invoiceTable td:nth-child(3) { /* Pozition */
+                width: 100px;
+            }
+            #invoiceTable th:nth-child(4), #invoiceTable td:nth-child(4) { /* Kurztext */
+                width: auto;
+                min-width: 200px;
+            }
+            #invoiceTable th:nth-child(5), #invoiceTable td:nth-child(5) { /* ME */
+                width: 60px;
+            }
+            #invoiceTable th:nth-child(6), #invoiceTable td:nth-child(6) { /* Menge */
+                width: 60px;
+            }
+            #invoiceTable th:nth-child(7), #invoiceTable td:nth-child(7) { /* E-Price */
+                width: 60px;
+            }
+            #invoiceTable th:nth-child(8), #invoiceTable td:nth-child(8) { /* Aufmaß */
+                width: 60px;
+            }
+        }
+
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            width: 120px;
+            height: 36px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box;
+        }
+
+        .status-draft {
+            background: #ff9800;
+            color: white;
+        }
+
+        .required-field::after {
+            content: "*";
+            color: var(--danger);
+            margin-left: 4px;
+        }
+
+        .input-error {
+            border-color: var(--danger) !important;
+            box-shadow: 0 0 0 3px rgba(229, 57, 53, 0.1) !important;
+        }
+
+        .error-message {
+            color: var(--danger);
+            font-size: 9px;
+            margin-top: 4px;
+            display: none;
+        }
+
+        .highlight-row {
+            animation: highlight 1.5s ease;
+        }
+
+        @keyframes highlight {
+            0% { background-color: rgba(11, 116, 222, 0.2); }
+            100% { background-color: transparent; }
+        }
+
+        .multi-select-row {
+            cursor: pointer;
+        }
+
+        .multi-select-row:hover {
+            background-color: rgba(11, 116, 222, 0.1);
+        }
+
+        .multi-select-row.selected {
+            background-color: rgba(67, 160, 71, 0.2);
+        }
+
+        .multi-select-row.bold {
+            font-weight: bold;
+        }
+
+        td.kurztext-cell {
+            white-space: normal !important;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            padding: 4px 8px;
+        }
+
+        input.kurz {
+            white-space: normal !important;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+            width: 100%;
+            box-sizing: border-box;
+            min-width: 100px;
+        }
+
+        .client-input-row {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-bottom: 2px;
+        }
+
+        .client-input-row label {
+            flex-shrink: 0;
+            white-space: nowrap;
+        }
+
+        .client-input-row input {
+            flex: 1;
+            font-size: 10px;
+        }
+
+        #invoiceTable th:nth-child(1), #invoiceTable td:nth-child(1),
+        #invoiceTable th:nth-child(2), #invoiceTable td:nth-child(2),
+        #invoiceTable th:nth-child(3), #invoiceTable td:nth-child(3),
+        #invoiceTable th:nth-child(5), #invoiceTable td:nth-child(5) {
+            width: 40px;
+            min-width: 40px;
+            max-width: 40px;
+        }
+        #invoiceTable th:nth-child(4), #invoiceTable td:nth-child(4) {
+            width: auto;
+            min-width: 300px;
+            max-width: 800px;
+            white-space: normal;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
+        }
+        @media print {
+            #invoiceTable th:nth-child(1), #invoiceTable td:nth-child(1),
+            #invoiceTable th:nth-child(2), #invoiceTable td:nth-child(2),
+            #invoiceTable th:nth-child(3), #invoiceTable td:nth-child(3),
+            #invoiceTable th:nth-child(5), #invoiceTable td:nth-child(5) {
+                width: 40px !important;
+                min-width: 40px !important;
+                max-width: 40px !important;
+            }
+            #invoiceTable th:nth-child(4), #invoiceTable td:nth-child(4) {
+                width: auto !important;
+                min-width: 300px !important;
+                max-width: 800px !important;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                overflow-wrap: break-word !important;
+            }
+        }
+
+        .invoice-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .invoice-actions .btn {
+            font-size: 12px;
+            padding: 6px 10px;
+            width: auto;
+            height: auto;
+        }
+
+        .invoice-filters {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .invoice-filters input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        /* New styles for notes section */
+        .notes-section {
+            margin-top: 16px;
+            padding: 12px;
+            background: #f9f9f9;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 12px;
+        }
+
+        #invoiceNotes {
+            min-height: 60px;
+            resize: vertical;
+        }
+    </style>
+@media print {
+    .invoice-header {
+        padding: 0.5mm 1mm 0.5mm 1mm !important;
+        margin-bottom: 0.5mm !important;
+        gap: 8px !important;
+    }
+    .invoice-header-part {
+        gap: 2px !important;
+        padding: 0.5mm !important;
+    }
+    .logo {
+        min-height: 30px !important;
+        max-height: 40px !important;
+    }
+    .address-title {
+        font-size: 10px !important;
+        margin-bottom: 1px !important;
+    }
+    .company-part .company-info > div {
+        font-size: 6px !important;
+        line-height: 1 !important;
+        margin-bottom: 0 !important;
+        padding: 0 !important;
+    }
+    .company-part .company-info > div:nth-child(1),
+    .company-part .company-info > div:nth-child(2) {
+        font-weight: bold !important;
+    }
+}
+</head>
+<body>
+
+<div class="topbar">
+        <div style="width:100%;display:flex;align-items:center;justify-content:space-between;">
+            <button class="btn no-print" onclick="window.location.href='index.html'" style="margin-right:18px;">
+                <i class="fas fa-arrow-left"></i> Kthehu
+            </button>
+            <div class="brand">Professionelle Rechnung — Import & Drucken</div>
+        </div>
+        <div class="toolbar no-print">
+            <label class="btn" for="fileInput">📥 Excel importieren</label>
+            <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none">
+            <label class="btn" for="logoInput">🖼️ Logo hochladen</label>
+            <input id="logoInput" type="file" accept="image/*" style="display:none">
+            <button id="btnAddNew" class="btn success">➕ Neu hinzufügen</button>
+            <button id="btnPrintPreview" class="btn primary">🖨️ Druckvorschau</button>
+            <button id="btnUndo" class="btn warning">↩️ Rückgängig</button>
+            <button id="btnRedo" class="btn warning">↪️ Wiederholen</button>
+            <button id="btnClearAll" class="btn danger">🗑️ Alles löschen</button>
+            <button id="btnPrint" class="btn">🖨️ Drucken</button>
+            <button id="btnPdf" class="btn">💾 PDF speichern</button>
+            <span class="status-badge status-draft">ENTWURF</span>
+        </div>
+</div>
+
+    <div class="container" style="padding-top:0;">
+    <div class="card invoice-header" style="margin-top:4px;">
+        <div class="invoice-header-part">
+            <div class="logo" id="logoBox"><img src="logo 2.png" alt="Logo" style="max-width:100%;max-height:100%;object-fit:contain;"></div>
+        </div>
+        <div class="invoice-header-part company-address-offset" style="margin-left:10%;">
+            <div style="font-weight:bold; color:#2563eb; font-size:12px; margin-bottom:2px; line-height:1.1; letter-spacing:0.2px;">FIRMENADRESSE</div>
+            <div style="font-weight:bold; color:#222; font-size:9px; margin-bottom:1px; line-height:1.1;">Technische Objektbetreuung</div>
+            <div style="font-weight:bold; color:#222; font-size:9px; margin-bottom:1px; line-height:1.1;">Service rund ums Haus</div>
+            <div style="color:#222; font-size:8px; margin-bottom:1px; line-height:1.1;">Schützenstr.12/41239 Mönchengladbach</div>
+            <div style="color:#222; font-size:8px; margin-bottom:1px; line-height:1.1;">Tel: 02166-2798970</div>
+            <div style="color:#222; font-size:8px; margin-bottom:1px; line-height:1.1;">Mobil: 0173-8708455</div>
+            <div style="color:#222; font-size:8px; margin-bottom:1px; line-height:1.1;">E-mail: info@tob-service.de</div>
+            <div style="color:#222; font-size:8px; margin-bottom:1px; line-height:1.1;">llumnica@tob-service.de</div>
+            <div style="color:#222; font-size:8px; margin-bottom:1px; line-height:1.1;">rafetllumnica@hotmail.de</div>
+            <div style="color:#222; font-size:8px; margin-bottom:1px; line-height:1.1;">www.tob-service.de</div>
+            <div style="color:#222; font-size:8px; margin-bottom:1px; line-height:1.1;">Urlaubsservice</div>
+            <div style="color:#222; font-size:8px; margin-bottom:0; line-height:1.1;">Sie entspannen - Wir arbeiten për sie</div>
+        </div>
+        <div class="invoice-header-part client-address-offset">
+            <div class="address-title" style="font-weight:bold; color:#2563eb; font-size:12px; margin-bottom:2px; letter-spacing:0.2px;">KUNDENADRESSE</div>
+            <div class="client-address-vertical">
+                <div class="client-address-row" style="display:flex; align-items:center; gap:4px; font-size:9px;">
+        <style>
+        /* Move client address section 10% lower in all views */
+        .client-address-offset {
+            margin-top: -2%;
+        }
+        @media print {
+            .client-address-offset {
+                margin-top: 0% !important;
+            }
+        }
+        </style>
+                    <span class="label-blue" style="min-width:70px; font-weight:600; color:#2563eb;">Kundenname:</span>
+                    <span id="clientNameDisplay" style="flex:1; color:#222;">z.B. Max Mustermann</span>
+                </div>
+                <div class="client-address-row" style="display:flex; align-items:center; gap:4px; font-size:9px;">
+                    <span class="label-red" style="min-width:70px; font-weight:600; color:#d32f2f;">Adresse:</span>
+                    <span id="clientAddressDisplay" style="flex:1; color:#222;">Kundenadresse</span>
+                </div>
+                <div class="client-address-row" style="display:flex; align-items:center; gap:4px; font-size:9px;">
+                    <span class="label-red" style="min-width:70px; font-weight:600; color:#d32f2f;">Telefonnummer:</span>
+                    <span id="clientPhoneDisplay" style="flex:1; color:#64748b;">z.B. 0123 456789</span>
+                </div>
+                <div class="client-address-row" style="display:flex; align-items:center; gap:4px; font-size:9px; margin-bottom:12px;">
+                    <span class="label-blue" style="min-width:70px; font-weight:600; color:#2563eb;">E-Mail:</span>
+                    <a id="clientEmailDisplay" href="mailto:kunde@example.com" style="flex:1; color:#2563eb; text-decoration:underline;">z.B. kunde@example.com</a>
+                </div>
+                <div class="client-address-row invoice-meta" style="display:flex; flex-direction:column; align-items:flex-start; font-size:11px; margin-top:24px; margin-bottom:0;">
+                    <div class="invoice-meta-row" style="font-weight:700; color:#222; margin-bottom:2px;">
+                        <div class="meta-nr" style="font-weight:700; color:#222;"><span>Rechnungsnr.:</span> <span id="invoiceNoDisplay" style="font-weight:normal; color:#222;">2025-001</span></div>
+                        <div class="meta-datum" style="font-weight:700; color:#222;"><span>Datum:</span> <span id="invoiceDateDisplay" style="font-weight:normal; color:#222;">2025-09-16</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Client toolbar moved here above filters -->
+    <div class="card no-print client-toolbar-box" style="margin-bottom:6px;">
+    <div class="client-toolbar-screenshot" style="display:flex; align-items:flex-start; gap:4px; background:#f7fafd; border:1px solid #e0e7ef; border-radius:8px; padding:2px 6px; width:100%; white-space:nowrap; flex-wrap:nowrap; overflow-x:hidden;">
+        <div style="display:flex; flex-direction:column; gap:2px; min-width:179px;">
+            <label class="small required-field" style="margin-right:2px;">Kundenname</label>
+            <input id="clientName" type="text" placeholder="z.B. Max Mustermann" class="client-field" style="width:179px;">
+            <span id="clientNameError" style="display:none; color:#d32f2f; font-size:11px; margin-top:2px;">Bitte dieses Feld ausfüllen!</span>
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2px; min-width:179px;">
+            <label class="small" style="margin-right:2px;">Adresse</label>
+            <input id="clientAddress" type="text" placeholder="Kundenadresse" class="client-field" style="width:179px;">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2px; min-width:140px;">
+            <label class="small" style="margin-right:2px;">Telefonnummer</label>
+            <input id="clientPhone" type="text" placeholder="z.B. 0123 456789" class="client-field" style="width:140px;">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2px; min-width:191px;">
+            <label class="small" style="margin-right:2px;">E-Mail</label>
+            <input id="clientEmail" type="text" placeholder="z.B. kunde@example.com" class="client-field" style="width:191px;">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2px; min-width:115px;">
+            <label class="small required-field" style="margin-left:8px; margin-right:2px;">Rechnungsnr.</label>
+            <input id="invoiceNo" type="text" value="2025-001" class="client-field" style="width:115px;">
+        </div>
+        <div style="display:flex; flex-direction:column; gap:2px; min-width:140px;">
+            <label class="small required-field" style="margin-left:6px; margin-right:2px;">Datum</label>
+            <input id="invoiceDate" type="date" class="client-field" style="width:140px;">
+        </div>
+    <button id="clearClientToolbar" type="button" style="align-self:flex-end; margin-left:10px; padding:4px 14px; border-radius:6px; border:1px solid #e0e7ef; background:#fff; color:#2563eb; font-weight:600; cursor:pointer;">Leeren</button>
+        </div>
+        <style>
+        .client-toolbar-screenshot input {
+            font-size: 11px;
+            padding: 0 3px 1px 3px;
+            border-radius: 4px;
+            border: 1px solid #e0e7ef;
+            background: #fff;
+            margin-right: 2px;
+            min-width: 0;
+            height: 20px;
+            line-height: 1.05;
+        }
+        .client-toolbar-screenshot label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #111;
+            margin-bottom: 0;
+            line-height: 1.05;
+        }
+        .client-toolbar-screenshot {
+            min-height: unset !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+        }
+        .client-toolbar-screenshot button#clearClientToolbar:hover {
+            background: #e0e7ef;
+        }
+        @media (max-width: 900px) {
+            .client-toolbar-box { display: none !important; }
+        }
+        @media print {
+            .client-toolbar-box { display: none !important; }
+            .client-address-vertical .client-address-row {
+                flex-direction: row !important;
+                align-items: center !important;
+                gap: 4px !important;
+                font-size: 9px !important;
+                margin-bottom: 0 !important;
+            }
+            .client-address-vertical .client-address-row.invoice-meta {
+                flex-direction: column !important;
+                align-items: flex-start !important;
+                font-size: 11px !important;
+                margin-top: 24px !important;
+            }
+            .client-address-vertical .client-address-row span.label-blue {
+                color: #2563eb !important;
+                font-weight: 600 !important;
+            }
+            .client-address-vertical .client-address-row span.label-red {
+                color: #d32f2f !important;
+                font-weight: 600 !important;
+            }
+            .client-address-vertical .client-address-row a {
+                color: #2563eb !important;
+                text-decoration: underline !important;
+                font-weight: 600 !important;
+            }
+            .client-address-vertical .client-address-row.invoice-meta div {
+                color: #222 !important;
+                font-weight: 700 !important;
+                display: block !important;
+                margin-bottom: 2px !important;
+                padding-top: 2px !important;
+                padding-bottom: 2px !important;
+            }
+
+            @media print {
+                .client-address-vertical .client-address-row.invoice-meta div:nth-child(2) span:first-child::before {
+                    content: "                    "; /* 20 spaces */
+                    white-space: pre;
+                }
+            }
+            .client-address-vertical .client-address-row.invoice-meta span span {
+                font-weight: 400 !important;
+            }
+        }
+        </style>
+    </div>
+
+    <div class="card no-print">
+        <div class="filters" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
+            <label class="small" style="margin-right:2px;">1) LV wählen</label>
+            <select id="lvSelect" style="width:70px; min-width:40px; max-width:100px; margin-right:8px;"><option value="">-- LV --</option></select>
+            <label class="small" style="margin-right:2px;">2) Position</label>
+            <select id="pozSelect" style="width:70px; min-width:40px; max-width:100px; margin-right:8px;"><option value="">-- Position --</option></select>
+            <label class="small" style="margin-right:2px;">3) Kurztext</label>
+            <div id="kurzSearchBox" style="display:inline-flex;align-items:center;gap:4px;">
+                <input id="kurzInput" type="text" placeholder="Text hier eingeben" style="width:110px; min-width:60px; max-width:160px;">
+                <button id="kurzPrevBtn" type="button" style="display:none;padding:2px 10px;border-radius:4px;border:1px solid #e0e7ef;background:#f7fafd;color:#2563eb;font-weight:600;cursor:pointer;">Zurück</button>
+                <span id="kurzMatchInfo" style="display:none;font-size:13px;"></span>
+                <button id="kurzNextBtn" type="button" style="display:none;padding:2px 10px;border-radius:4px;border:1px solid #e0e7ef;background:#f7fafd;color:#2563eb;font-weight:600;cursor:pointer;">Weiter</button>
+            </div>
+            <label class="small" style="margin-right:2px;">MwSt (%)</label>
+            <input id="vatRate" type="number" value="20" min="0" max="100" style="width:50px; min-width:30px; max-width:60px;">
+        </div>
+    </div>
+
+    <div class="card">
+        <div style="display:flex; justify-content:space-between; align-items:center">
+        <div class="muted">Ausgewählter Artikel — Details</div>
+            <div class="detail-actions no-print">
+                <button id="btnAddAllToInvoice" class="btn success">➕ Alle hinzufügen</button>
+                <button id="btnAddSelectedToInvoice" class="btn success">➕ Ausgewählte hinzufügen</button>
+                <button id="btnDeleteAllDetailRows" class="btn danger">🗑️ Alle löschen</button>
+                <button id="btnDeleteSelectedDetailRows" class="btn danger">🗑️ Ausgewählte löschen</button>
+            </div>
+        </div>
+        <table id="detailTable">
+            <thead><tr><th>LV</th><th>Position</th><th>Kurztext</th><th>ME</th><th>Menge</th><th>E-Preis</th><th>Aufmaß</th><th>Aktion</th></tr></thead>
+            <tbody></tbody>
+        </table>
+    </div>
+
+    <div class="card" id="invoiceArea">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
+            <div style="font-weight:700" class="invoice-title">Rechnung - Positionen</div>
+            <div class="no-print invoice-actions">
+                <span class="muted" id="itemsCount">0 Artikel</span>
+                <button id="btnDeleteAllRows" class="btn danger">🗑️ Alle löschen</button>
+                <button id="btnDeleteSelectedRows" class="btn danger">🗑️ Ausgewählte löschen</button>
+            </div>
+        </div>
+        <div class="no-print invoice-filters">
+            <label class="small">In Rechnung suchen:</label>
+            <input id="invoiceSearch" type="text" placeholder="Suche in LV, Position oder Kurztext...">
+        </div>
+        <div class="invoice-table-container">
+            <table id="invoiceTable">
+                <thead>
+                    <tr>
+                        <th>Nr</th><th>LV</th><th>Position</th><th>Kurztext</th>
+                        <th>ME</th><th>Menge</th><th>E-Preis</th><th>Aufmaß</th><th class="no-print">Aktion</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+        
+        <div class="totals">
+            <div><span style="font-weight:700; margin-right:10px">Zwischensumme:</span><span id="subTotal" style="font-weight:700">0.00 €</span></div>
+            <div><span style="font-weight:700; margin-right:10px">MwSt (<span id="vatShow">20</span>%):</span><span id="vatAmount" style="font-weight:700">0.00 €</span></div>
+            <div><span style="font-weight:900; font-size:18px; margin-right:10px">Gesamtsumme:</span><span id="grandTotal" style="font-weight:900; font-size:18px">0.00 €</span></div>
+        </div>
+    </div>
+
+    <!-- Advanced: Added notes section (restored position, smaller font) -->
+    <div class="card no-print notes-section" style="font-size:12px;">
+        <label class="small">Zusätzliche Hinweise (erscheint am Ende der Rechnung):</label>
+    <textarea id="invoiceNotes" placeholder="Fügen Sie Hinweise, Zahlungsbedingungen oder weitere Details hinzu..." style="font-size:9px;"></textarea>
+    </div>
+</div>
+
+<div class="invoice-preview" id="invoicePreview">
+    <div class="preview-content">
+        <div class="preview-header">
+            <h2>Parapamje e Faturës</h2>
+            <div class="preview-toolbar">
+                <button class="btn primary" onclick="printInvoice()">🖨️ Print</button>
+                <button class="btn primary" onclick="saveAsPdf()">💾 Ruaj PDF</button>
+                <button class="btn success" onclick="finalizeAndClear()">✅ Finalizo & Pastro</button>
+                <button class="btn warning" onclick="closePreview()">↩️ Kthehu</button>
+            </div>
+        </div>
+        <div id="previewContent"></div>
+    </div>
+</div>
+
+<script>
+// Validation for required fields before print/PDF
+function validateRequiredFields() {
+    let valid = true;
+    const clientName = document.getElementById('clientName').value.trim();
+    const invoiceNo = document.getElementById('invoiceNo').value.trim();
+    const invoiceDate = document.getElementById('invoiceDate').value.trim();
+    // Hide all errors first
+    document.getElementById('clientNameError').style.display = 'none';
+    if (!clientName) {
+        document.getElementById('clientNameError').style.display = 'block';
+        valid = false;
+    }
+    if (!invoiceNo) {
+    alert('Bitte das Feld "Rechnungsnr." ausfüllen!');
+        valid = false;
+    }
+    if (!invoiceDate) {
+    alert('Bitte das Feld "Datum" ausfüllen!');
+        valid = false;
+    }
+    return valid;
+}
+document.getElementById('btnPrint').addEventListener('click', function(e) {
+    if (!validateRequiredFields()) {
+        e.preventDefault();
+        document.getElementById('clientName').focus();
+        return false;
+    }
+});
+document.getElementById('btnPdf').addEventListener('click', function(e) {
+    if (!validateRequiredFields()) {
+        e.preventDefault();
+        document.getElementById('clientName').focus();
+        return false;
+    }
+});
+// Hide error message as soon as user starts typing in Emri i klientit
+document.getElementById('clientName').addEventListener('input', function() {
+    if (this.value.trim()) {
+        document.getElementById('clientNameError').style.display = 'none';
+    }
+});
+        // Clear client toolbar fields on 'Pastro' click
+        document.addEventListener('DOMContentLoaded', function() {
+            var clearBtn = document.getElementById('clearClientToolbar');
+            if(clearBtn) {
+                clearBtn.onclick = function() {
+                    document.getElementById('clientName').value = '';
+                    document.getElementById('clientAddress').value = '';
+                    document.getElementById('clientPhone').value = '';
+                    document.getElementById('clientEmail').value = '';
+                    document.getElementById('invoiceNo').value = '2025-001';
+                    document.getElementById('invoiceDate').value = '';
+                    if(typeof updateClientDisplay === 'function') updateClientDisplay();
+                };
+            }
+        });
+    let allRows = [], currentItems = [], invoiceCounter = 0;
+    let undoStack = [], redoStack = [];
+    let selectedIndices = []; // Track selected rows in detailTable
+    let selectedInvoiceRows = []; // Track selected rows in invoiceTable
+    let invoiceSearchTerm = ''; // For filtering invoice rows
+    const fmt = v => Number(v || 0).toFixed(2);
+    const esc = s => String(s || '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+    // Set today's date as default
+    document.getElementById('invoiceDate').valueAsDate = new Date();
+
+    // Load saved state from localStorage
+// Delete all detail rows
+document.getElementById('btnDeleteAllDetailRows').addEventListener('click', function() {
+    currentItems = [];
+    selectedIndices = [];
+    populateDetail(currentItems);
+    saveState();
+});
+
+// Delete selected detail rows
+document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click', function() {
+    if (!selectedIndices.length) return;
+    currentItems = currentItems.filter((_, idx) => !selectedIndices.includes(idx));
+    selectedIndices = [];
+    populateDetail(currentItems);
+    saveState();
+});
+    function loadSavedState() {
+        // Always restore client fields from localStorage.clientData if present
+        const clientData = localStorage.getItem('clientData');
+        if (clientData) {
+            try {
+                const c = JSON.parse(clientData);
+                document.getElementById('clientName').value = c.clientName || '';
+                document.getElementById('clientAddress').value = c.clientAddress || '';
+                document.getElementById('clientPhone').value = c.clientPhone || '';
+                document.getElementById('clientEmail').value = c.clientEmail || '';
+                document.getElementById('invoiceNo').value = c.invoiceNo || '2025-001';
+                document.getElementById('invoiceDate').value = c.invoiceDate || new Date().toISOString().split('T')[0];
+                // If no date, always set to today
+                if (!c.invoiceDate) {
+                    document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+                }
+            } catch(e) {}
+        } else {
+            // If no clientData, set date to today
+            document.getElementById('invoiceDate').value = new Date().toISOString().split('T')[0];
+        }
+        const savedState = localStorage.getItem('invoiceState');
+        // Always restore logo from localStorage.logoData if present
+        const logoData = localStorage.getItem('logoData');
+        if (logoData) {
+            const img = document.createElement('img');
+            img.src = logoData;
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '100%';
+            img.style.objectFit = 'contain';
+            const box = document.getElementById('logoBox');
+            box.innerHTML = '';
+            box.appendChild(img);
+        }
+        if (savedState) {
+            const state = JSON.parse(savedState);
+            allRows = state.allRows || [];
+            currentItems = state.currentItems || [];
+            invoiceCounter = state.invoiceCounter || 0;
+            undoStack = state.undoStack || [];
+            redoStack = state.redoStack || [];
+            selectedIndices = state.selectedIndices || [];
+            selectedInvoiceRows = state.selectedInvoiceRows || [];
+            invoiceSearchTerm = state.invoiceSearchTerm || '';
+
+            // Restore client fields
+            document.getElementById('clientName').value = state.clientName || '';
+            document.getElementById('clientAddress').value = state.clientAddress || '';
+            document.getElementById('clientPhone').value = state.clientPhone || '';
+            document.getElementById('clientEmail').value = state.clientEmail || '';
+            document.getElementById('invoiceNo').value = state.invoiceNo || '2025-001';
+            document.getElementById('invoiceDate').value = state.invoiceDate || new Date().toISOString().split('T')[0];
+            document.getElementById('vatRate').value = state.vatRate || '20';
+            document.getElementById('invoiceSearch').value = invoiceSearchTerm;
+
+            // Restore invoice table
+            if (state.invoiceItems) {
+                state.invoiceItems.forEach(item => addToInvoice(item));
+            }
+
+            // Restore LV, Pozition, and detailTable selections
+            if (state.lvSelect) {
+                populateLV();
+                document.getElementById('lvSelect').value = state.lvSelect;
+                if (state.lvSelect) {
+                    const event = new Event('change');
+                    document.getElementById('lvSelect').dispatchEvent(event);
+                    if (state.pozSelect) {
+                        document.getElementById('pozSelect').value = state.pozSelect;
+                        document.getElementById('pozSelect').dispatchEvent(event);
+                    }
+                }
+            }
+
+            // Restore selected invoice rows
+            const invoiceRows = document.querySelectorAll('#invoiceTable tbody tr');
+            invoiceRows.forEach(row => {
+                const idx = parseInt(row.dataset.idx);
+                if (selectedInvoiceRows.includes(idx)) {
+                    row.classList.add('selected');
+                }
+            });
+
+            // Apply search filter
+            filterInvoiceRows();
+
+            updateClientDisplay();
+            updateItemsCount();
+            recalcTotals();
+            updateUndoRedoButtons();
+        }
+    }
+
+    // Save state to localStorage
+    function saveState() {
+        const state = {
+            allRows,
+            currentItems,
+            lvSelect: document.getElementById('lvSelect').value,
+            pozSelect: document.getElementById('pozSelect').value
+        };
+        localStorage.setItem('invoiceState', JSON.stringify(state));
+    }
+
+    // Clear state after explicit clear actions
+    function clearState() {
+    localStorage.removeItem('invoiceState');
+    allRows = [];
+    currentItems = [];
+    selectedIndices = [];
+    selectedInvoiceRows = [];
+    invoiceSearchTerm = '';
+    invoiceCounter = 0;
+    undoStack = [];
+    redoStack = [];
+    // Do NOT clear logoBox or logoData here!
+    // Do NOT clear client fields here, only clear UI
+    document.getElementById('clientName').value = '';
+    document.getElementById('clientAddress').value = '';
+    document.getElementById('clientPhone').value = '';
+    document.getElementById('clientEmail').value = '';
+    document.getElementById('invoiceNo').value = '2025-001';
+    document.getElementById('invoiceDate').valueAsDate = new Date();
+    document.getElementById('vatRate').value = '20';
+    document.getElementById('lvSelect').innerHTML = '<option value="">-- LV --</option>';
+    document.getElementById('pozSelect').innerHTML = '<option value="">-- Pozition --</option>';
+    document.getElementById('kurzInput').value = '';
+    document.getElementById('invoiceSearch').value = '';
+    document.querySelector('#detailTable tbody').innerHTML = '<tr><td colspan="8" class="muted">Asnjë artikull i zgjedhur</td></tr>';
+    document.querySelector('#invoiceTable tbody').innerHTML = '';
+    updateClientDisplay();
+    updateItemsCount();
+    recalcTotals();
+    updateUndoRedoButtons();
+    }
+
+    // Clear all data
+    function clearAllData() {
+    if (confirm('Sind Sie sicher, dass Sie alle Daten löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+            clearState();
+            localStorage.removeItem('clientData');
+            location.reload();
+        }
+    // Save client fields to localStorage.clientData on change
+    function saveClientData() {
+        const c = {
+            clientName: document.getElementById('clientName').value,
+            clientAddress: document.getElementById('clientAddress').value,
+            clientPhone: document.getElementById('clientPhone').value,
+            clientEmail: document.getElementById('clientEmail').value,
+            invoiceNo: document.getElementById('invoiceNo').value,
+            invoiceDate: document.getElementById('invoiceDate').value
+        };
+        try {
+            localStorage.setItem('clientData', JSON.stringify(c));
+            updateClientDisplay();
+        } catch(e) {}
+    }
+    [
+        'clientName', 'clientAddress', 'clientPhone', 'clientEmail', 'invoiceNo', 'invoiceDate'
+    ].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', saveClientData);
+    });
+    }
+
+    // Finalize and clear data
+    function finalizeAndClear() {
+    if (confirm('Sind Sie sicher, dass Sie abschließen und alle Daten löschen möchten?')) {
+            clearState();
+            closePreview();
+            alert('Rechnung abgeschlossen und Daten gelöscht.');
+        }
+    }
+
+    function updateClientDisplay() {
+        // Always use the latest clientData from localStorage
+        const clientData = localStorage.getItem('clientData');
+        let c = {};
+        if (clientData) {
+            try { c = JSON.parse(clientData); } catch(e) {}
+        }
+        document.getElementById('clientNameDisplay').textContent = c.clientName || '';
+        document.getElementById('clientAddressDisplay').textContent = c.clientAddress || '';
+        document.getElementById('clientPhoneDisplay').textContent = c.clientPhone || '';
+        document.getElementById('clientEmailDisplay').textContent = c.clientEmail || '';
+        document.getElementById('invoiceNoDisplay').textContent = c.invoiceNo ? `Nr. Fature: ${c.invoiceNo}` : '';
+        // Format date as DD.MM.YYYY
+        let dateStr = c.invoiceDate;
+        if (!dateStr) {
+            const d = new Date();
+            dateStr = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+        } else {
+            const d = new Date(dateStr);
+            dateStr = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
+        }
+        document.getElementById('invoiceDateDisplay').textContent = dateStr ? `Data: ${dateStr}` : '';
+        saveState();
+    }
+
+    function updateUndoRedoButtons() {
+        document.getElementById('btnUndo').disabled = undoStack.length === 0;
+        document.getElementById('btnRedo').disabled = redoStack.length === 0;
+    }
+
+    document.getElementById('logoInput').addEventListener('change', e => {
+        const fileInput = e.target;
+        const f = fileInput.files[0];
+        if (!f) return;
+
+        if (!f.type.match('image.*')) {
+            alert('Bitte laden Sie nur Bilddateien hoch!');
+            fileInput.value = '';
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = ev => {
+            const img = document.createElement('img');
+            img.src = ev.target.result;
+            img.style.maxWidth = '100%';
+            img.style.maxHeight = '100%';
+            img.style.objectFit = 'contain';
+            const box = document.getElementById('logoBox');
+            box.innerHTML = '';
+            box.appendChild(img);
+            // Save logo to localStorage.logoData
+            try {
+                localStorage.setItem('logoData', ev.target.result);
+            } catch (e) {
+                alert('Logo kann nicht im localStorage gespeichert werden (möglicherweise zu groß).');
+            }
+            saveState();
+        };
+        reader.onerror = () => {
+            alert('Fehler beim Lesen der Datei!');
+            fileInput.value = '';
+        };
+        reader.readAsDataURL(f);
+    });
+
+    document.getElementById('fileInput').addEventListener('change', async (e) => {
+        const fileInput = e.target;
+        const f = fileInput.files[0];
+        if (!f) {
+            alert('Bitte wählen Sie eine Excel-Datei aus!');
+            return;
+        }
+        if (!f.name.match(/\.(xlsx|xls)$/i)) {
+            alert('Bitte laden Sie nur Excel-Dateien hoch (.xlsx oder .xls)!');
+            fileInput.value = '';
+            return;
+        }
+
+        try {
+            const data = await f.arrayBuffer();
+            const wb = XLSX.read(data, { type: 'array' });
+            allRows = [];
+
+            wb.SheetNames.forEach(sheet => {
+                const rows = XLSX.utils.sheet_to_json(wb.Sheets[sheet], { defval: '' });
+                rows.forEach(r => {
+                    const map = {};
+                    Object.keys(r).forEach(k => map[k.toLowerCase().trim()] = k);
+
+                    allRows.push({
+                        sheet,
+                        LV: String(r[map['lv']] || '').trim(),
+                        Pozition: String(r[map['pozition']] || '').trim(),
+                        Kurztext: String(r[map['kurztext']] || '').trim(),
+                        ME: String(r[map['me']] || '').trim(),
+                        Menge: Number(r[map['menge']] || 0),
+                        EPrice: Number(r[map['e-price']] || 0),
+                        GPrice: Number(r[map['g-price']] || 0),
+                        Aufmass: Number(r[map['aufmaß']] || 0)
+                    });
+                });
+            });
+
+            // Add to undo stack
+            const currentState = {
+                action: 'importExcel',
+                data: allRows.length,
+                timestamp: new Date()
+            };
+            undoStack.push(currentState);
+            redoStack = []; // Clear redo stack on new action
+
+            populateLV();
+            alert('Import abgeschlossen — ' + allRows.length + ' Zeilen');
+            updateUndoRedoButtons();
+            saveState();
+        } catch (err) {
+            alert('Fehler beim Verarbeiten der Excel-Datei: ' + err.message);
+            console.error(err);
+            fileInput.value = '';
+        }
+    });
+
+    function populateLV() {
+        const lvSel = document.getElementById('lvSelect');
+        lvSel.innerHTML = '<option value="">-- LV --</option>';
+
+        Array.from(new Set(allRows.map(r => r.LV).filter(Boolean))).sort().forEach(lv => {
+            const op = document.createElement('option');
+            op.value = lv;
+            op.textContent = lv;
+            lvSel.appendChild(op);
+        });
+
+        document.getElementById('pozSelect').innerHTML = '<option value="">-- Pozition --</option>';
+        clearPreview();
+        saveState();
+    }
+
+    document.getElementById('lvSelect').addEventListener('change', () => {
+        const lv = document.getElementById('lvSelect').value;
+        const pozSel = document.getElementById('pozSelect');
+        pozSel.innerHTML = '<option value="">-- Pozition --</option>';
+
+        if (!lv) return;
+
+        Array.from(new Set(allRows.filter(r => r.LV === lv).map(r => r.Pozition).filter(Boolean))).sort().forEach(p => {
+            const op = document.createElement('option');
+            op.value = p;
+            op.textContent = p;
+            pozSel.appendChild(op);
+        });
+
+        clearPreview();
+        saveState();
+    });
+
+    document.getElementById('pozSelect').addEventListener('change', () => {
+        const lv = document.getElementById('lvSelect').value;
+        const poz = document.getElementById('pozSelect').value;
+
+        if (!lv || !poz) return;
+
+    // Always reload currentItems from allRows (original data)
+    currentItems = allRows.filter(r => r.LV === lv && r.Pozition === poz).map(item => ({ ...item }));
+    selectedIndices = [];
+    populateDetail(currentItems);
+    saveState();
+    });
+
+    document.getElementById('kurzInput').addEventListener('input', e => {
+    // Event listeners për navigimin e rezultateve të Kurztext
+    document.getElementById('kurzPrevBtn').onclick = function() {
+        if (!window.kurzNav || !window.kurzNav.indices.length) return;
+        window.kurzNav.current = (window.kurzNav.current - 1 + window.kurzNav.indices.length) % window.kurzNav.indices.length;
+        const matchIdx = window.kurzNav.indices[window.kurzNav.current];
+        function isParentRow(row) {
+            return (row.LV && row.Pozition && (Number(row.Menge) || Number(row.EPrice)));
+        }
+        let parentIdx = matchIdx;
+        while (parentIdx > 0 && !isParentRow(allRows[parentIdx])) parentIdx--;
+        let endIdx = parentIdx + 1;
+        while (endIdx < allRows.length && !isParentRow(allRows[endIdx])) endIdx++;
+        const group = allRows.slice(parentIdx, endIdx);
+        populateDetail(group);
+        document.getElementById('kurzMatchInfo').textContent = `${window.kurzNav.current+1} / ${window.kurzNav.indices.length} paraqitje për "${window.kurzNav.text}"`;
+    };
+    document.getElementById('kurzNextBtn').onclick = function() {
+        if (!window.kurzNav || !window.kurzNav.indices.length) return;
+        window.kurzNav.current = (window.kurzNav.current + 1) % window.kurzNav.indices.length;
+        const matchIdx = window.kurzNav.indices[window.kurzNav.current];
+        function isParentRow(row) {
+            return (row.LV && row.Pozition && (Number(row.Menge) || Number(row.EPrice)));
+        }
+        let parentIdx = matchIdx;
+        while (parentIdx > 0 && !isParentRow(allRows[parentIdx])) parentIdx--;
+        let endIdx = parentIdx + 1;
+        while (endIdx < allRows.length && !isParentRow(allRows[endIdx])) endIdx++;
+        const group = allRows.slice(parentIdx, endIdx);
+        populateDetail(group);
+        document.getElementById('kurzMatchInfo').textContent = `${window.kurzNav.current+1} / ${window.kurzNav.indices.length} paraqitje për "${window.kurzNav.text}"`;
+    };
+        const lv = document.getElementById('lvSelect').value;
+        const poz = document.getElementById('pozSelect').value;
+        const searchText = e.target.value.trim().toLowerCase();
+        // Navigimi dhe numërimi i paraqitjeve
+        if (!window.kurzNav) window.kurzNav = { indices: [], current: 0, text: '' };
+        if (!lv && !poz) {
+            if (searchText) {
+                // Gjej të gjitha paraqitjet
+                let matchIndices = [];
+                for (let i = 0; i < allRows.length; i++) {
+                    if (allRows[i].Kurztext && allRows[i].Kurztext.toLowerCase().includes(searchText)) {
+                        matchIndices.push(i);
+                    }
+                }
+                if (matchIndices.length > 0) {
+                    // Reset navigation nëse ndryshon teksti
+                    if (window.kurzNav.text !== searchText) {
+                        window.kurzNav = { indices: matchIndices, current: 0, text: searchText };
+                    } else {
+                        window.kurzNav.indices = matchIndices;
+                    }
+                    // Shfaq navigation UI vetëm nëse ka më shumë se një paraqitje
+                    if (window.kurzNav.indices.length > 1) {
+                        document.getElementById('kurzPrevBtn').style.display = '';
+                        document.getElementById('kurzNextBtn').style.display = '';
+                        document.getElementById('kurzMatchInfo').style.display = '';
+                        document.getElementById('kurzMatchInfo').textContent = `${window.kurzNav.current+1} / ${window.kurzNav.indices.length} paraqitje për "${searchText}"`;
+                    } else {
+                        document.getElementById('kurzPrevBtn').style.display = 'none';
+                        document.getElementById('kurzNextBtn').style.display = 'none';
+                        document.getElementById('kurzMatchInfo').style.display = '';
+                        document.getElementById('kurzMatchInfo').textContent = `1 / 1 paraqitje për "${searchText}"`;
+                    }
+                    // Gjej parent group për paraqitjen aktuale dhe përditëso currentItems
+                    let matchIdx = window.kurzNav.indices[window.kurzNav.current];
+                    function isParentRow(row) {
+                        return (row.LV && row.Pozition && (Number(row.Menge) || Number(row.EPrice)));
+                    }
+                    let parentIdx = matchIdx;
+                    while (parentIdx > 0 && !isParentRow(allRows[parentIdx])) parentIdx--;
+                    let endIdx = parentIdx + 1;
+                    while (endIdx < allRows.length && !isParentRow(allRows[endIdx])) endIdx++;
+                    const group = allRows.slice(parentIdx, endIdx);
+                    // Përditëso currentItems për të pasqyruar grupin e filtruar
+                    currentItems = group.map(item => ({ ...item }));
+                    selectedIndices = []; // Pastro zgjedhjet e mëparshme
+                    populateDetail(currentItems);
+                } else {
+                    document.getElementById('kurzPrevBtn').style.display = 'none';
+                    document.getElementById('kurzNextBtn').style.display = 'none';
+                    document.getElementById('kurzMatchInfo').style.display = 'none';
+                    currentItems = []; // Pastro currentItems nëse nuk ka përputhje
+                    selectedIndices = [];
+                    populateDetail(currentItems);
+                    window.kurzNav = { indices: [], current: 0, text: '' };
+                }
+            } else {
+                document.getElementById('kurzPrevBtn').style.display = 'none';
+                document.getElementById('kurzNextBtn').style.display = 'none';
+                document.getElementById('kurzMatchInfo').style.display = 'none';
+                currentItems = []; // Pastro currentItems nëse fusha është bosh
+                selectedIndices = [];
+                populateDetail(currentItems);
+                window.kurzNav = { indices: [], current: 0, text: '' };
+            }
+        } else if (currentItems.length) {
+            currentItems.forEach(item => item.Kurztext = e.target.value);
+            selectedIndices = []; // Pastro zgjedhjet kur ndryshon Kurztext për LV/Pozition
+            populateDetail(currentItems);
+            document.getElementById('kurzPrevBtn').style.display = 'none';
+            document.getElementById('kurzNextBtn').style.display = 'none';
+            document.getElementById('kurzMatchInfo').style.display = 'none';
+            window.kurzNav = { indices: [], current: 0, text: '' };
+        }
+        saveState();
+    });
+
+    function populateDetail(items) {
+        const tbody = document.querySelector('#detailTable tbody');
+        tbody.innerHTML = '';
+
+        if (items.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="8" class="muted">Kein Artikel ausgewählt</td></tr>';
+            return;
+        }
+
+        items.forEach((item, idx) => {
+            const tr = document.createElement('tr');
+            tr.classList.add('multi-select-row');
+            tr.dataset.idx = idx;
+            // Parent row: has value in Menge (not null/empty/zero) or E-Price
+            const isParent = (item.Menge && Number(item.Menge)) || Number(item.EPrice);
+            if (isParent) tr.classList.add('bold');
+            if (selectedIndices.includes(idx)) tr.classList.add('selected');
+            const menge = !item.Menge ? '' : fmt(item.Menge);
+            const eprice = !item.EPrice ? '' : fmt(item.EPrice);
+            const aufmass = (item.Menge && item.EPrice) ? fmt(item.Menge * item.EPrice) : '';
+            if (isParent) {
+                // Show all columns, bold, editable
+                tr.innerHTML = `
+                    <td>${esc(item.LV)}</td>
+                    <td>${esc(item.Pozition)}</td>
+                    <td class="kurztext-cell"><input value="${esc(item.Kurztext)}" class="kurz" data-idx="${idx}"/></td>
+                    <td><input value="${esc(item.ME)}" class="me-input" data-idx="${idx}"/></td>
+                    <td><input type="number" value="${menge}" class="menge-input" data-idx="${idx}"/></td>
+                    <td><input type="number" value="${eprice}" class="eprice-input" data-idx="${idx}"/></td>
+                    <td class="aufmass-display">${aufmass}</td>
+                    <td><button class="btn" onclick="toggleSelect(this)">✅</button></td>
+                `;
+            } else {
+                // Child row: only show Kurztext, all other columns empty
+                tr.innerHTML = `
+                    <td colspan="2"></td>
+                    <td class="kurztext-cell"><input value="${esc(item.Kurztext)}" class="kurz" data-idx="${idx}"/></td>
+                    <td colspan="4"></td>
+                    <td><button class="btn" onclick="toggleSelect(this)">✅</button></td>
+                `;
+            }
+
+            tr.querySelector('.kurz').addEventListener('input', e => {
+                item.Kurztext = e.target.value;
+                document.getElementById('kurzInput').value = e.target.value;
+                saveState();
+            });
+
+            if (isParent) {
+                const meInput = tr.querySelector('.me-input');
+                if (meInput) {
+                    meInput.addEventListener('input', e => {
+                        item.ME = e.target.value;
+                        tr.classList.toggle('bold', !!item.ME);
+                        saveState();
+                    });
+                }
+                const mengeInput = tr.querySelector('.menge-input');
+                if (mengeInput) {
+                    mengeInput.addEventListener('input', e => {
+                        item.Menge = parseFloat(e.target.value) || '';
+                        updateDetailCalculations(tr);
+                        saveState();
+                    });
+                }
+                const epriceInput = tr.querySelector('.eprice-input');
+                if (epriceInput) {
+                    epriceInput.addEventListener('input', e => {
+                        item.EPrice = parseFloat(e.target.value) || 0;
+                        updateDetailCalculations(tr);
+                        saveState();
+                    });
+                }
+            }
+
+            tr.addEventListener('click', (e) => {
+                if (!e.target.classList.contains('btn')) {
+                    toggleSelect(tr.querySelector('button'));
+                }
+            });
+
+            tbody.appendChild(tr);
+        });
+    }
+
+    function updateDetailCalculations(tr) {
+        const idx = tr.dataset.idx;
+        const item = currentItems[idx];
+        const menge = parseFloat(tr.querySelector('.menge-input')?.value) || 0;
+        const eprice = parseFloat(tr.querySelector('.eprice-input')?.value) || 0;
+        const aufmass = (menge && eprice) ? menge * eprice : 0;
+
+        item.Menge = menge;
+        item.EPrice = eprice;
+        item.Aufmass = aufmass;
+        const aufmassDisplay = tr.querySelector('.aufmass-display');
+        if (aufmassDisplay) aufmassDisplay.textContent = aufmass ? fmt(aufmass) : '';
+    }
+
+    function toggleSelect(button) {
+        const tr = button.closest('tr');
+        const idx = parseInt(tr.dataset.idx);
+        tr.classList.toggle('selected');
+        if (tr.classList.contains('selected')) {
+            if (!selectedIndices.includes(idx)) selectedIndices.push(idx);
+        } else {
+            selectedIndices = selectedIndices.filter(i => i !== idx);
+        }
+        saveState();
+    }
+
+    function toggleInvoiceRowSelect(button) {
+        const tr = button.closest('tr');
+        const idx = parseInt(tr.dataset.idx);
+        tr.classList.toggle('selected');
+        if (tr.classList.contains('selected')) {
+            if (!selectedInvoiceRows.includes(idx)) selectedInvoiceRows.push(idx);
+        } else {
+            selectedInvoiceRows = selectedInvoiceRows.filter(i => i !== idx);
+        }
+        saveState();
+    }
+
+    function filterInvoiceRows() {
+        const searchTerm = invoiceSearchTerm.toLowerCase();
+        const rows = document.querySelectorAll('#invoiceTable tbody tr');
+        let visibleCount = 0;
+
+        rows.forEach(row => {
+            const lv = row.children[1].textContent.toLowerCase();
+            const poz = row.children[2].textContent.toLowerCase();
+            const kurz = row.children[3].textContent.toLowerCase();
+            const matches = lv.includes(searchTerm) || poz.includes(searchTerm) || kurz.includes(searchTerm);
+            row.style.display = matches ? '' : 'none';
+            if (matches) visibleCount++;
+        });
+
+        // Update items count to show visible items
+        document.getElementById('itemsCount').textContent = visibleCount + ' artikuj (të filtruar)';
+        if (searchTerm === '') {
+            document.getElementById('itemsCount').textContent = rows.length + ' artikuj';
+        }
+
+        recalcTotals(); // Recalculate totals based on visible rows
+    }
+
+    document.getElementById('invoiceSearch').addEventListener('input', e => {
+        invoiceSearchTerm = e.target.value;
+        filterInvoiceRows();
+        saveState();
+    });
+
+    function clearPreview() {
+        currentItems = [];
+        selectedIndices = [];
+        document.querySelector('#detailTable tbody').innerHTML = '<tr><td colspan="8" class="muted">Asnjë artikull i zgjedhur</td></tr>';
+        saveState();
+    }
+
+    document.getElementById('btnAddNew').addEventListener('click', () => {
+        const newItem = {
+            LV: document.getElementById('lvSelect').value || 'New LV',
+            Pozition: document.getElementById('pozSelect').value || 'New Pozition',
+            Kurztext: document.getElementById('kurzInput').value || 'New Item',
+            ME: 'Unit',
+            Menge: 0,
+            EPrice: 0,
+            Aufmass: 0
+        };
+
+        const currentState = {
+            action: 'addNew',
+            item: newItem,
+            timestamp: new Date()
+        };
+        undoStack.push(currentState);
+        redoStack = [];
+
+        allRows.push(newItem);
+        currentItems = [newItem];
+        selectedIndices = [];
+        populateDetail(currentItems);
+        populateLV();
+        document.getElementById('lvSelect').value = newItem.LV;
+        const lvChangeEvent = new Event('change');
+        document.getElementById('lvSelect').dispatchEvent(lvChangeEvent);
+        document.getElementById('pozSelect').value = newItem.Pozition;
+        document.getElementById('kurzInput').value = newItem.Kurztext;
+        updateUndoRedoButtons();
+        saveState();
+    });
+
+    document.getElementById('btnAddAllToInvoice').addEventListener('click', () => {
+        // Shto të gjithë rreshtat e shfaqur në tabelën e detajeve, edhe nëse janë rezultat kërkimi
+        const tbody = document.querySelector('#detailTable tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        let added = 0;
+        let itemsToAdd = [];
+        rows.forEach((tr, idx) => {
+            const kurzInput = tr.querySelector('.kurz');
+            if (kurzInput && kurzInput.value.trim()) {
+                const item = currentItems[idx];
+                if (item) {
+                    addToInvoice(item);
+                    itemsToAdd.push(item);
+                    added++;
+                }
+            }
+        });
+        if (added > 0) {
+            const currentState = {
+                items: [...itemsToAdd],
+                action: 'addAll',
+                timestamp: new Date()
+            };
+            undoStack.push(currentState);
+            redoStack = [];
+            clearPreview();
+            document.getElementById('kurzInput').value = '';
+            updateItemsCount();
+            updateUndoRedoButtons();
+            saveState();
+            showToast('Alle Zeilen wurden zur Rechnung hinzugefügt!', 'success');
+        } else {
+            showToast('Keine Zeilen zum Hinzufügen!', 'warning');
+        }
+    });
+
+    document.getElementById('btnAddSelectedToInvoice').addEventListener('click', () => {
+        if (!currentItems.length) {
+            alert('Bitte wählen Sie Artikel aus, bevor Sie sie hinzufügen.');
+            return;
+        }
+
+        const selectedRows = document.querySelectorAll('#detailTable tbody .selected');
+        if (selectedRows.length === 0) {
+            alert('Bitte wählen Sie mindestens einen Artikel zum Hinzufügen aus.');
+            return;
+        }
+
+        const currentState = {
+            items: [...currentItems],
+            selectedIndices: Array.from(selectedRows).map(row => parseInt(row.dataset.idx)),
+            action: 'addSelected',
+            timestamp: new Date()
+        };
+        undoStack.push(currentState);
+        redoStack = []; // Clear redo stack on new action
+
+        selectedRows.forEach(row => {
+            const idx = row.dataset.idx;
+            addToInvoice(currentItems[idx]);
+        });
+
+    clearPreview();
+    // Mos fshi fushat e kërkimit dhe navigation UI pas shtesës
+    updateItemsCount();
+    updateUndoRedoButtons();
+    saveState();
+    });
+
+    document.getElementById('btnDeleteAllRows').addEventListener('click', () => {
+        const tbody = document.querySelector('#invoiceTable tbody');
+        const rows = tbody.querySelectorAll('tr');
+        if (rows.length === 0) {
+            alert('Keine Zeilen zum Löschen.');
+            return;
+        }
+
+    if (confirm('Sind Sie sicher, dass Sie alle Zeilen löschen möchten?')) {
+            const deletedRows = Array.from(rows).map(tr => ({
+                rowIndex: parseInt(tr.dataset.idx),
+                aufmassValue: parseFloat(tr.querySelector('.aufmass').textContent.replace(' €', '')) || 0,
+                rowData: Array.from(tr.children).map(td => td.innerHTML)
+            }));
+
+            const currentState = {
+                action: 'deleteAllRows',
+                deletedRows,
+                timestamp: new Date()
+            };
+            undoStack.push(currentState);
+            redoStack = [];
+
+            tbody.innerHTML = '';
+            selectedInvoiceRows = [];
+            recalcTotals();
+            updateItemsCount();
+            updateUndoRedoButtons();
+            saveState();
+            alert('Alle Zeilen wurden gelöscht.');
+        }
+    });
+
+    document.getElementById('btnDeleteSelectedRows').addEventListener('click', () => {
+        const selectedRows = document.querySelectorAll('#invoiceTable tbody .selected');
+        if (selectedRows.length === 0) {
+            alert('Bitte wählen Sie mindestens eine Zeile zum Löschen aus.');
+            return;
+        }
+
+    if (confirm('Sind Sie sicher, dass Sie die ausgewählten Zeilen löschen möchten?')) {
+            const deletedRows = Array.from(selectedRows).map(tr => ({
+                rowIndex: parseInt(tr.dataset.idx),
+                aufmassValue: parseFloat(tr.querySelector('.aufmass').textContent.replace(' €', '')) || 0,
+                rowData: Array.from(tr.children).map(td => td.innerHTML)
+            }));
+
+            const currentState = {
+                action: 'deleteSelectedRows',
+                deletedRows,
+                timestamp: new Date()
+            };
+            undoStack.push(currentState);
+            redoStack = [];
+
+            selectedRows.forEach(row => row.remove());
+            selectedInvoiceRows = selectedInvoiceRows.filter(idx => !Array.from(selectedRows).some(r => parseInt(r.dataset.idx) === idx));
+            recalcTotals();
+            updateItemsCount();
+            updateUndoRedoButtons();
+            saveState();
+            alert('Ausgewählte Zeilen wurden gelöscht.');
+        }
+    });
+
+    document.getElementById('btnUndo').addEventListener('click', () => {
+        if (undoStack.length === 0) {
+            alert('Keine Aktionen zum Rückgängigmachen.');
+            return;
+        }
+
+        const lastAction = undoStack.pop();
+        redoStack.push(lastAction);
+
+        if (lastAction.action === 'addAll' || lastAction.action === 'addSelected') {
+            const tbody = document.querySelector('#invoiceTable tbody');
+            const rows = tbody.querySelectorAll('tr');
+
+            if (rows.length > 0) {
+                const itemsToRemove = lastAction.action === 'addAll' ? lastAction.items.length : lastAction.selectedIndices.length;
+
+                for (let i = 0; i < itemsToRemove; i++) {
+                    if (rows[rows.length - 1 - i]) {
+                        rows[rows.length - 1 - i].remove();
+                    }
+                }
+
+                recalcTotals();
+                updateItemsCount();
+                updateUndoRedoButtons();
+                alert('Letzte Aktion wurde rückgängig gemacht.');
+                saveState();
+            }
+        } else if (lastAction.action === 'deleteAllRows' || lastAction.action === 'deleteSelectedRows') {
+            const tbody = document.querySelector('#invoiceTable tbody');
+            lastAction.deletedRows.forEach(deleted => {
+                const tr = document.createElement('tr');
+                tr.dataset.idx = deleted.rowIndex;
+                tr.innerHTML = deleted.rowData.join('');
+                if (selectedInvoiceRows.includes(deleted.rowIndex)) {
+                    tr.classList.add('selected');
+                }
+                tbody.appendChild(tr);
+                // Reattach click event for selection
+                const selectBtn = tr.querySelector('.no-print button');
+                if (selectBtn) {
+                    selectBtn.addEventListener('click', () => toggleInvoiceRowSelect(selectBtn));
+                }
+                tr.addEventListener('click', (e) => {
+                    if (!e.target.classList.contains('btn')) {
+                        toggleInvoiceRowSelect(tr.querySelector('.no-print button'));
+                    }
+                });
+            });
+            recalcTotals();
+            updateItemsCount();
+            updateUndoRedoButtons();
+            alert('Letzte Aktion wurde rückgängig gemacht.');
+            saveState();
+        } else if (lastAction.action === 'addNew') {
+            allRows = allRows.filter(item => item !== lastAction.item);
+            currentItems = [];
+            selectedIndices = [];
+            populateDetail(currentItems);
+            populateLV();
+            updateUndoRedoButtons();
+            saveState();
+            alert('Veprimi i fundit u zhbë.');
+        }
+    });
+
+    document.getElementById('btnRedo').addEventListener('click', () => {
+        if (redoStack.length === 0) {
+            alert('Keine Aktionen zum Wiederholen.');
+            return;
+        }
+
+        const lastRedoAction = redoStack.pop();
+        undoStack.push(lastRedoAction);
+
+        if (lastRedoAction.action === 'addAll') {
+            lastRedoAction.items.forEach(item => addToInvoice(item));
+            updateItemsCount();
+            updateUndoRedoButtons();
+            alert('Aktion wurde wiederholt.');
+            saveState();
+        } else if (lastRedoAction.action === 'addSelected') {
+            lastRedoAction.selectedIndices.forEach(idx => {
+                addToInvoice(lastRedoAction.items[idx]);
+            });
+            updateItemsCount();
+            updateUndoRedoButtons();
+            alert('Veprimi u ribë.');
+            saveState();
+        } else if (lastRedoAction.action === 'deleteAllRows' || lastRedoAction.action === 'deleteSelectedRows') {
+            const tbody = document.querySelector('#invoiceTable tbody');
+            const rows = Array.from(tbody.querySelectorAll('tr'));
+            lastRedoAction.deletedRows.forEach(deleted => {
+                const row = rows.find(r => parseInt(r.dataset.idx) === deleted.rowIndex);
+                if (row) {
+                    row.remove();
+                }
+            });
+            selectedInvoiceRows = selectedInvoiceRows.filter(idx => !lastRedoAction.deletedRows.some(d => d.rowIndex === idx));
+            recalcTotals();
+            updateItemsCount();
+            updateUndoRedoButtons();
+            alert('Veprimi u ribë.');
+            saveState();
+        } else if (lastRedoAction.action === 'addNew') {
+            allRows.push(lastRedoAction.item);
+            currentItems = [lastRedoAction.item];
+            selectedIndices = [];
+            populateDetail(currentItems);
+            populateLV();
+            document.getElementById('lvSelect').value = lastRedoAction.item.LV;
+            const lvChangeEvent = new Event('change');
+            document.getElementById('lvSelect').dispatchEvent(lvChangeEvent);
+            document.getElementById('pozSelect').value = lastRedoAction.item.Pozition;
+            document.getElementById('kurzInput').value = lastRedoAction.item.Kurztext;
+            updateUndoRedoButtons();
+            saveState();
+            alert('Veprimi u ribë.');
+        }
+    });
+
+    document.getElementById('btnClearAll').addEventListener('click', clearAllData);
+
+    function addToInvoice(item) {
+        const tbody = document.querySelector('#invoiceTable tbody');
+        let lastNr = 0;
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        if (rows.length > 0) {
+            for (let i = rows.length - 1; i >= 0; i--) {
+                const tdNr = rows[i].children[0];
+                const tdLV = rows[i].children[1];
+                const tdME = rows[i].children[4];
+                if (tdNr && tdNr.textContent.trim() !== '' && tdLV && tdLV.textContent.trim() !== '' && tdME && tdME.textContent.trim() !== '') {
+                    lastNr = parseInt(tdNr.textContent.trim());
+                    break;
+                }
+            }
+        }
+        let nrValue = '';
+        if (item.LV && item.LV.trim() !== '' && item.ME && item.ME.trim() !== '') {
+            nrValue = lastNr + 1;
+        }
+        const tr = document.createElement('tr');
+        tr.dataset.idx = rows.length + 1;
+        const isParent = (item.Menge && Number(item.Menge)) || Number(item.EPrice);
+        const menge = !item.Menge ? '' : fmt(item.Menge);
+        const eprice = !item.EPrice ? '' : fmt(item.EPrice);
+        const aufmass = (item.Menge && item.EPrice) ? fmt(item.Menge * item.EPrice) : '';
+        if (isParent) {
+            tr.innerHTML = `
+                <td class="right">${nrValue}</td>
+                <td>${esc(item.LV)}</td>
+                <td>${esc(item.Pozition)}</td>
+                <td class="kurztext-cell">${esc(item.Kurztext)}</td>
+                <td>${esc(item.ME)}</td>
+                <td>${menge}</td>
+                <td>${eprice ? eprice + ' €' : ''}</td>
+                <td class="aufmass">${aufmass ? aufmass + ' €' : ''}</td>
+                <td class="no-print"><button class="btn" onclick="toggleInvoiceRowSelect(this)">✅</button></td>
+            `;
+            tr.classList.add('bold');
+        } else {
+            tr.innerHTML = `
+                <td class="right"></td>
+                <td></td>
+                <td></td>
+                <td class="kurztext-cell">${esc(item.Kurztext)}</td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td class="aufmass"></td>
+                <td class="no-print"><button class="btn" onclick="toggleInvoiceRowSelect(this)">✅</button></td>
+            `;
+        }
+        tr.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('btn')) {
+                toggleInvoiceRowSelect(tr.querySelector('.no-print button'));
+            }
+        });
+        tbody.appendChild(tr);
+        tr.classList.add('highlight-row');
+        setTimeout(() => {
+            tr.classList.remove('highlight-row');
+        }, 1500);
+        filterInvoiceRows(); // Apply filter after adding
+
+        // After adding to invoice, keep search fields enabled for next selection
+        document.getElementById('lvSelect').disabled = false;
+        document.getElementById('pozSelect').disabled = false;
+        document.getElementById('kurzInput').disabled = false;
+    }
+
+    function removeInvoiceRow(button) {
+        const tr = button.closest('tr');
+        const rowIndex = parseInt(tr.dataset.idx);
+        const aufmassValue = parseFloat(tr.querySelector('.aufmass').textContent.replace(' €', '')) || 0;
+
+        const undoState = {
+            action: 'deleteSelectedRows',
+            deletedRows: [{
+                rowIndex: rowIndex,
+                aufmassValue: aufmassValue,
+                rowData: Array.from(tr.children).map(td => td.innerHTML)
+            }],
+            timestamp: new Date()
+        };
+        undoStack.push(undoState);
+        redoStack = [];
+
+        tr.remove();
+        selectedInvoiceRows = selectedInvoiceRows.filter(idx => idx !== rowIndex);
+        filterInvoiceRows(); // Reapply filter after removal
+        updateUndoRedoButtons();
+        saveState();
+    }
+
+    function recalcTotals() {
+        let sub = 0;
+        const visibleRows = document.querySelectorAll('#invoiceTable tbody tr:not([style*="display: none"])');
+        visibleRows.forEach(r => {
+            const aufmassText = r.querySelector('.aufmass')?.textContent;
+            if (aufmassText) {
+                const value = parseFloat(aufmassText.replace(' €', '')) || 0;
+                sub += value;
+            }
+        });
+
+        const vatRate = parseFloat(document.getElementById('vatRate').value) || 0;
+        const vat = sub * vatRate / 100;
+        const total = sub + vat;
+
+        document.getElementById('subTotal').textContent = fmt(sub) + ' €';
+        document.getElementById('vatAmount').textContent = fmt(vat) + ' €';
+        document.getElementById('grandTotal').textContent = fmt(total) + ' €';
+        document.getElementById('vatShow').textContent = fmt(vatRate);
+    }
+
+    function updateItemsCount() {
+        const allRows = document.querySelectorAll('#invoiceTable tbody tr').length;
+        const visibleRows = document.querySelectorAll('#invoiceTable tbody tr:not([style*="display: none"])').length;
+        const text = invoiceSearchTerm ? `${visibleRows} / ${allRows} artikuj` : `${allRows} artikuj`;
+        document.getElementById('itemsCount').textContent = text;
+    }
+
+    document.getElementById('vatRate').addEventListener('input', () => {
+        recalcTotals();
+        saveState();
+    });
+
+    document.querySelectorAll('.client-field').forEach(field => {
+        field.addEventListener('input', updateClientDisplay);
+        field.addEventListener('blur', function() {
+            if (!this.value.trim() && field.id !== 'clientAddress' && field.id !== 'clientPhone' && field.id !== 'clientEmail') {
+                this.classList.add('input-error');
+                document.getElementById(this.id + 'Error').style.display = 'block';
+            } else {
+                this.classList.remove('input-error');
+                document.getElementById(this.id + 'Error').style.display = 'none';
+            }
+        });
+    });
+
+    document.getElementById('btnPrintPreview').addEventListener('click', () => {
+        if (validateInvoice()) {
+            showPreview();
+        }
+    });
+
+    document.getElementById('btnPrint').addEventListener('click', () => {
+        if (validateInvoice()) {
+            printInvoice();
+        }
+    });
+
+    document.getElementById('btnPdf').addEventListener('click', () => {
+        if (validateInvoice()) {
+            saveAsPdf();
+        }
+    });
+
+    function validateInvoice() {
+        let isValid = true;
+        document.querySelectorAll('.client-field').forEach(field => {
+            if (!field.value.trim() && field.id !== 'clientAddress' && field.id !== 'clientPhone' && field.id !== 'clientEmail') {
+                field.classList.add('input-error');
+                document.getElementById(field.id + 'Error').style.display = 'block';
+                isValid = false;
+            }
+        });
+        if (document.querySelectorAll('#invoiceTable tbody tr').length === 0) {
+            alert('Fügen Sie mindestens einen Artikel zur Rechnung hinzu!');
+            isValid = false;
+        }
+        if (!isValid) {
+            alert('Bitte füllen Sie die Pflichtfelder des Kunden aus!');
+        }
+        return isValid;
+    }
+
+    function showPreview() {
+        const previewContent = document.getElementById('previewContent');
+        const invoiceHeader = document.querySelector('.invoice-header');
+        const invoiceArea = document.getElementById('invoiceArea');
+
+        const headerClone = invoiceHeader.cloneNode(true);
+        const invoiceClone = invoiceArea.cloneNode(true);
+
+        headerClone.querySelectorAll('.no-print').forEach(el => el.remove());
+        invoiceClone.querySelectorAll('.no-print').forEach(el => el.remove());
+
+        // Extract the title and table container from invoiceClone
+        const titleDiv = invoiceClone.querySelector('.invoice-title').parentNode;
+        const tableContainer = invoiceClone.querySelector('.invoice-table-container');
+        const totals = invoiceClone.querySelector('.totals');
+
+        // Remove the card wrapper to eliminate extra margins/padding
+        const card = invoiceClone.querySelector('.card');
+        if (card) {
+            card.replaceWith(...card.childNodes);
+        }
+
+        // Do not sort; preserve current order (including filter)
+        const tbody = tableContainer.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr:not([style*="display: none"])'));
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row.cloneNode(true)));
+
+        // Create a new container for preview content
+        const previewWrapper = document.createElement('div');
+        previewWrapper.style.margin = '0';
+        previewWrapper.style.padding = '0';
+        previewWrapper.appendChild(headerClone);
+        previewWrapper.appendChild(titleDiv);
+        previewWrapper.appendChild(tableContainer);
+        previewWrapper.appendChild(totals);
+        // Always add notes below totals, even if outside invoiceArea
+        const notesValue = document.getElementById('invoiceNotes') ? document.getElementById('invoiceNotes').value : '';
+        if (notesValue && notesValue.trim()) {
+            const notesDiv = document.createElement('div');
+            notesDiv.style.marginTop = '16px';
+            notesDiv.style.padding = '12px';
+            notesDiv.style.background = '#f9f9f9';
+            notesDiv.style.border = '1px solid #e6eef7';
+            notesDiv.style.borderRadius = '8px';
+            notesDiv.style.fontSize = '9px';
+            notesDiv.innerHTML = `<label class='small'>Shënime shtesë (shfaqet në fund të faturës):</label><div>${notesValue.replace(/\n/g,'<br>')}</div>`;
+            previewWrapper.appendChild(notesDiv);
+        }
+        previewContent.innerHTML = '';
+        previewContent.appendChild(previewWrapper);
+
+        document.getElementById('invoicePreview').style.display = 'flex';
+
+        // Add double-click event to return to main view without clearing data
+        const preview = document.getElementById('invoicePreview');
+        preview.addEventListener('dblclick', () => {
+            closePreview();
+        });
+
+        saveState();
+    }
+
+    function closePreview() {
+        document.getElementById('invoicePreview').style.display = 'none';
+        const preview = document.getElementById('invoicePreview');
+        preview.removeEventListener('dblclick', () => {}); // Clean up event listener
+        // Repopulate detailTable to ensure selected items are preserved
+        populateDetail(currentItems);
+    }
+
+    function printInvoice() {
+        const originalContents = document.body.innerHTML;
+        const invoiceHeader = document.querySelector('.invoice-header');
+        const invoiceArea = document.getElementById('invoiceArea');
+
+        const headerClone = invoiceHeader.cloneNode(true);
+        const invoiceClone = invoiceArea.cloneNode(true);
+
+        headerClone.querySelectorAll('.no-print').forEach(el => el.remove());
+        invoiceClone.querySelectorAll('.no-print').forEach(el => el.remove());
+
+        const titleDiv = invoiceClone.querySelector('.invoice-title').parentNode;
+        const tableContainer = invoiceClone.querySelector('.invoice-table-container');
+        const totals = invoiceClone.querySelector('.totals');
+
+        const card = invoiceClone.querySelector('.card');
+        if (card) {
+            card.replaceWith(...card.childNodes);
+        }
+
+        // Do not sort; preserve current order (including filter)
+        const tbody = tableContainer.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr:not([style*="display: none"])'));
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row.cloneNode(true)));
+
+        const printContainer = document.createElement('div');
+        printContainer.style.width = '210mm';
+        printContainer.style.minHeight = '297mm';
+        printContainer.style.padding = '5mm';
+        printContainer.appendChild(headerClone);
+        printContainer.appendChild(titleDiv);
+        printContainer.appendChild(tableContainer);
+        printContainer.appendChild(totals);
+        // Always add notes below totals, even if outside invoiceArea
+        const notesValue = document.getElementById('invoiceNotes') ? document.getElementById('invoiceNotes').value : '';
+        if (notesValue && notesValue.trim()) {
+            const notesDiv = document.createElement('div');
+            notesDiv.style.marginTop = '16px';
+            notesDiv.style.padding = '12px';
+            notesDiv.style.background = '#f9f9f9';
+            notesDiv.style.border = '1px solid #e6eef7';
+            notesDiv.style.borderRadius = '8px';
+            notesDiv.style.fontSize = '9px';
+            notesDiv.innerHTML = `<label class='small'>Shënime shtesë (shfaqet në fund të faturës):</label><div>${notesValue.replace(/\n/g,'<br>')}</div>`;
+            printContainer.appendChild(notesDiv);
+        }
+        // Save state before print so it can be restored after reload
+        try { localStorage.setItem('lastState', JSON.stringify({
+            state: localStorage.getItem('state'),
+            clientData: localStorage.getItem('clientData'),
+            logo: localStorage.getItem('logo')
+        })); } catch(e) {}
+    document.body.innerHTML = `<div class='preview-content'>${printContainer.innerHTML}</div>`;
+    window.print();
+    document.body.innerHTML = originalContents;
+    // Mos bëj reload, që të dhënat e adresës së klientit të ruhen
+    // Restore last state after print/preview reload
+    (function restoreLastStateAfterPrint() {
+        if (localStorage.getItem('lastState')) {
+            try {
+                const last = JSON.parse(localStorage.getItem('lastState'));
+                if (last.state) localStorage.setItem('state', last.state);
+                if (last.clientData) localStorage.setItem('clientData', last.clientData);
+                if (last.logo) localStorage.setItem('logo', last.logo);
+            } catch(e) {}
+            localStorage.removeItem('lastState');
+        }
+    })();
+    }
+
+    function saveAsPdf() {
+        const invoiceHeader = document.querySelector('.invoice-header');
+        const invoiceArea = document.getElementById('invoiceArea');
+
+        const headerClone = invoiceHeader.cloneNode(true);
+        const invoiceClone = invoiceArea.cloneNode(true);
+
+        headerClone.querySelectorAll('.no-print').forEach(el => el.remove());
+        invoiceClone.querySelectorAll('.no-print').forEach(el => el.remove());
+
+        const titleDiv = invoiceClone.querySelector('.invoice-title').parentNode;
+        const tableContainer = invoiceClone.querySelector('.invoice-table-container');
+        const totals = invoiceClone.querySelector('.totals');
+
+        const card = invoiceClone.querySelector('.card');
+        if (card) {
+            card.replaceWith(...card.childNodes);
+        }
+
+        // Do not sort; preserve current order (including filter)
+        const tbody = tableContainer.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr:not([style*="display: none"])'));
+        tbody.innerHTML = '';
+        rows.forEach(row => tbody.appendChild(row.cloneNode(true)));
+
+        const pdfContainer = document.createElement('div');
+        pdfContainer.className = 'preview-content';
+        pdfContainer.appendChild(headerClone);
+        pdfContainer.appendChild(titleDiv);
+        pdfContainer.appendChild(tableContainer);
+        pdfContainer.appendChild(totals);
+        // Always add notes below totals, even if outside invoiceArea
+        const notesValue = document.getElementById('invoiceNotes') ? document.getElementById('invoiceNotes').value : '';
+        if (notesValue && notesValue.trim()) {
+            const notesDiv = document.createElement('div');
+            notesDiv.style.marginTop = '16px';
+            notesDiv.style.padding = '12px';
+            notesDiv.style.background = '#f9f9f9';
+            notesDiv.style.border = '1px solid #e6eef7';
+            notesDiv.style.borderRadius = '8px';
+            notesDiv.style.fontSize = '9px';
+            notesDiv.innerHTML = `<label class='small'>Shënime shtesë (shfaqet në fund të faturës):</label><div>${notesValue.replace(/\n/g,'<br>')}</div>`;
+            pdfContainer.appendChild(notesDiv);
+        }
+        // Save state before PDF so it can be restored after reload
+        try { localStorage.setItem('lastState', JSON.stringify({
+            state: localStorage.getItem('state'),
+            clientData: localStorage.getItem('clientData'),
+            logo: localStorage.getItem('logo')
+        })); } catch(e) {}
+        const opt = {
+            margin: 5,
+            filename: 'fatura_' + document.getElementById('invoiceNo').value + '.pdf',
+            image: { type: 'jpeg', quality: 1 },
+            html2canvas: { scale: 3, useCORS: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+        };
+        html2pdf().set(opt).from(pdfContainer).save();
+    }
+
+    // Ngushto automatikisht kolonat sipas përmbajtjes, përveç Kurztext
+    function autoResizeInvoiceTable() {
+        const table = document.getElementById('invoiceTable');
+
+        if (!table) return;
+        const ths = table.querySelectorAll('th');
+        const tds = table.querySelectorAll('tbody tr:not([style*="display: none"])');
+        // Indeksi i Kurztext është 3 (fillon nga 0)
+        ths.forEach((th, idx) => {
+            if (idx === 3) {
+                th.style.width = 'auto';
+                th.style.minWidth = '200px';
+                th.style.maxWidth = '600px';
+            } else {
+                let maxLen = 0;
+                tds.forEach(tr => {
+                    const td = tr.children[idx];
+                    if (td && td.textContent.length > maxLen) maxLen = td.textContent.length;
+                });
+                // Llogarit gjerësinë sipas përmbajtjes
+                let width = Math.max(40, Math.min(120, maxLen * 8));
+                th.style.width = width + 'px';
+                th.style.minWidth = width + 'px';
+                th.style.maxWidth = width + 'px';
+            }
+        });
+    }
+    // Thirr funksionin pas çdo ndryshimi në tabelë
+    const invoiceTableObserver = new MutationObserver(autoResizeInvoiceTable);
+    invoiceTableObserver.observe(document.querySelector('#invoiceTable tbody'), { childList: true, subtree: true });
+    // Thirr fillimisht
+    autoResizeInvoiceTable();
+
+    // Load saved state on page load
+    loadSavedState();
+    updateClientDisplay();
+    updateUndoRedoButtons();
+</script>
+</body>
+<script>
+function updateClientAddressBlock() {
+    document.getElementById('clientNameDisplay').textContent = document.getElementById('clientName').value || 'P.sh. John Doe';
+    document.getElementById('clientAddressDisplay').textContent = document.getElementById('clientAddress').value || 'Adresa e klientit';
+    document.getElementById('clientPhoneDisplay').textContent = document.getElementById('clientPhone').value || 'P.sh. 0123 456789';
+    var email = document.getElementById('clientEmail').value || 'P.sh. klient@example.com';
+    var emailDisplay = document.getElementById('clientEmailDisplay');
+    if(emailDisplay) {
+        emailDisplay.textContent = email;
+        if(email && email.includes('@') && !email.startsWith('P.sh.')) {
+            emailDisplay.href = 'mailto:' + email;
+        } else {
+            emailDisplay.removeAttribute('href');
+        }
+    }
+    document.getElementById('invoiceNoDisplay').textContent = document.getElementById('invoiceNo').value || '2025-001';
+    document.getElementById('invoiceDateDisplay').textContent = document.getElementById('invoiceDate').value || 'mm/dd/yyyy';
+}
+['clientName','clientAddress','clientPhone','clientEmail','invoiceNo','invoiceDate'].forEach(function(id) {
+    var el = document.getElementById(id);
+    if (el) el.addEventListener('input', updateClientAddressBlock);
+});
+updateClientAddressBlock();
+</script>
+</html>
