@@ -1,22 +1,12 @@
-    <!-- Moved misplaced @media print block into <style> in <head> below -->
 <!DOCTYPE html>
 <html lang="sq">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Professionelle Rechnung — Excel Import & Drucken/PDF</title>
+    <title>Faturë Profesionale — Import Excel & Print/PDF</title>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <style>
-        @media print {
-            .client-address-vertical .client-address-row.invoice-meta .meta-nr {
-                display: none !important;
-            }
-            .client-address-vertical .client-address-row.invoice-meta .meta-datum span:first-child::before {
-                content: "                                                  "; /* 50 spaces */
-                white-space: pre;
-            }
-        }
         :root {
             --bg: linear-gradient(135deg, #e3f0ff 0%, #f8faff 100%);
             --card: rgba(255,255,255,0.85);
@@ -167,7 +157,10 @@
             color: #222 !important;
         }
         /* Unified print and preview styles */
-        /* Unified print and preview styles: moved to @media print below */
+        .preview-content {
+            background: #fff !important;
+            color: #222 !important;
+        }
         @media print {
     .client-address-vertical > div {
         display: block !important;
@@ -672,8 +665,7 @@
             margin-bottom: 1px;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-        }
-        
+    }
 
         .filters {
             display: flex;
@@ -1207,35 +1199,42 @@
 <body>
 
 <div class="topbar">
-        <div style="width:100%;display:flex;align-items:center;justify-content:space-between;">
-            <button class="btn no-print" onclick="window.location.href='index.html'" style="margin-right:18px;">
-                <i class="fas fa-arrow-left"></i> Kthehu
-            </button>
-            <div class="brand">Professionelle Rechnung — Import & Drucken</div>
-        </div>
-        <div class="toolbar no-print">
-            <label class="btn" for="fileInput">📥 Excel importieren</label>
-            <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none">
-            <label class="btn" for="logoInput">🖼️ Logo hochladen</label>
-            <input id="logoInput" type="file" accept="image/*" style="display:none">
-            <button id="btnAddNew" class="btn success">➕ Neu hinzufügen</button>
-            <button id="btnPrintPreview" class="btn primary">🖨️ Druckvorschau</button>
-            <button id="btnUndo" class="btn warning">↩️ Rückgängig</button>
-            <button id="btnRedo" class="btn warning">↪️ Wiederholen</button>
-            <button id="btnClearAll" class="btn danger">🗑️ Alles löschen</button>
-            <button id="btnPrint" class="btn">🖨️ Drucken</button>
-            <button id="btnPdf" class="btn">💾 PDF speichern</button>
-            <span class="status-badge status-draft">ENTWURF</span>
-        </div>
+    <div class="brand">Faturë Profesionale — Import & Print</div>
+    <div class="toolbar no-print">
+        <label class="btn" for="fileInput">📥 Ngarko Excel</label>
+        <input id="fileInput" type="file" accept=".xlsx,.xls" style="display:none">
+        <label class="btn" for="logoInput">🖼️ Ngarko Logo</label>
+        <input id="logoInput" type="file" accept="image/*" style="display:none">
+        <button id="btnAddNew" class="btn success">➕ Shto e Re</button>
+        <button id="btnPrintPreview" class="btn primary">🖨️ Print Preview</button>
+        <button id="btnUndo" class="btn warning">↩️ Undo</button>
+        <button id="btnRedo" class="btn warning">↪️ Redo</button>
+        <button id="btnClearAll" class="btn danger">🗑️ Pastro gjithçka</button>
+    <button id="btnPrint" class="btn">🖨️ Print</button>
+    <button id="btnPdf" class="btn">💾 Ruaj PDF</button>
+    <button id="btnBackHome" class="btn warning" style="margin-left:8px;" onclick="window.location.href='index.html'">↩️ Kthehu në Faqen Kryesore</button>
+        <span class="status-badge status-draft">DRAFT</span>
+    </div>
 </div>
 
     <div class="container" style="padding-top:0;">
     <div class="card invoice-header" style="margin-top:4px;">
         <div class="invoice-header-part">
-            <div class="logo" id="logoBox"><img src="logo 2.png" alt="Logo" style="max-width:100%;max-height:100%;object-fit:contain;"></div>
+            <div class="logo" id="logoBox"><strong style="color:var(--accent)">LOGO</strong></div>
         </div>
         <div class="invoice-header-part company-address-offset" style="margin-left:10%;">
-            <div style="font-weight:bold; color:#2563eb; font-size:12px; margin-bottom:2px; line-height:1.1; letter-spacing:0.2px;">FIRMENADRESSE</div>
+        <style>
+        /* Move company address section 0.2% lower in all views */
+        .company-address-offset {
+            margin-top: 0.3%;
+        }
+        @media print {
+            .company-address-offset {
+                margin-top: 0.3% !important;
+            }
+        }
+        </style>
+            <div style="font-weight:bold; color:#2563eb; font-size:12px; margin-bottom:2px; line-height:1.1; letter-spacing:0.2px;">ADRESA E KOMPANISE</div>
             <div style="font-weight:bold; color:#222; font-size:9px; margin-bottom:1px; line-height:1.1;">Technische Objektbetreuung</div>
             <div style="font-weight:bold; color:#222; font-size:9px; margin-bottom:1px; line-height:1.1;">Service rund ums Haus</div>
             <div style="color:#222; font-size:8px; margin-bottom:1px; line-height:1.1;">Schützenstr.12/41239 Mönchengladbach</div>
@@ -1249,7 +1248,7 @@
             <div style="color:#222; font-size:8px; margin-bottom:0; line-height:1.1;">Sie entspannen - Wir arbeiten për sie</div>
         </div>
         <div class="invoice-header-part client-address-offset">
-            <div class="address-title" style="font-weight:bold; color:#2563eb; font-size:12px; margin-bottom:2px; letter-spacing:0.2px;">KUNDENADRESSE</div>
+            <div class="address-title" style="font-weight:bold; color:#2563eb; font-size:12px; margin-bottom:2px; letter-spacing:0.2px;">ADRESA E KLIENTIT</div>
             <div class="client-address-vertical">
                 <div class="client-address-row" style="display:flex; align-items:center; gap:4px; font-size:9px;">
         <style>
@@ -1263,26 +1262,24 @@
             }
         }
         </style>
-                    <span class="label-blue" style="min-width:70px; font-weight:600; color:#2563eb;">Kundenname:</span>
-                    <span id="clientNameDisplay" style="flex:1; color:#222;">z.B. Max Mustermann</span>
+                    <span class="label-blue" style="min-width:70px; font-weight:600; color:#2563eb;">Emri i klientit:</span>
+                    <span id="clientNameDisplay" style="flex:1; color:#222;">P.sh. John Doe</span>
                 </div>
                 <div class="client-address-row" style="display:flex; align-items:center; gap:4px; font-size:9px;">
-                    <span class="label-red" style="min-width:70px; font-weight:600; color:#d32f2f;">Adresse:</span>
-                    <span id="clientAddressDisplay" style="flex:1; color:#222;">Kundenadresse</span>
+                    <span class="label-red" style="min-width:70px; font-weight:600; color:#d32f2f;">Adresa:</span>
+                    <span id="clientAddressDisplay" style="flex:1; color:#222;">Adresa e klientit</span>
                 </div>
                 <div class="client-address-row" style="display:flex; align-items:center; gap:4px; font-size:9px;">
-                    <span class="label-red" style="min-width:70px; font-weight:600; color:#d32f2f;">Telefonnummer:</span>
-                    <span id="clientPhoneDisplay" style="flex:1; color:#64748b;">z.B. 0123 456789</span>
+                    <span class="label-red" style="min-width:70px; font-weight:600; color:#d32f2f;">Numri i telefonit:</span>
+                    <span id="clientPhoneDisplay" style="flex:1; color:#64748b;">P.sh. 0123 456789</span>
                 </div>
                 <div class="client-address-row" style="display:flex; align-items:center; gap:4px; font-size:9px; margin-bottom:12px;">
-                    <span class="label-blue" style="min-width:70px; font-weight:600; color:#2563eb;">E-Mail:</span>
-                    <a id="clientEmailDisplay" href="mailto:kunde@example.com" style="flex:1; color:#2563eb; text-decoration:underline;">z.B. kunde@example.com</a>
+                    <span class="label-blue" style="min-width:70px; font-weight:600; color:#2563eb;">Email:</span>
+                    <a id="clientEmailDisplay" href="mailto:klient@example.com" style="flex:1; color:#2563eb; text-decoration:underline;">P.sh. klient@example.com</a>
                 </div>
                 <div class="client-address-row invoice-meta" style="display:flex; flex-direction:column; align-items:flex-start; font-size:11px; margin-top:24px; margin-bottom:0;">
-                    <div class="invoice-meta-row" style="font-weight:700; color:#222; margin-bottom:2px;">
-                        <div class="meta-nr" style="font-weight:700; color:#222;"><span>Rechnungsnr.:</span> <span id="invoiceNoDisplay" style="font-weight:normal; color:#222;">2025-001</span></div>
-                        <div class="meta-datum" style="font-weight:700; color:#222;"><span>Datum:</span> <span id="invoiceDateDisplay" style="font-weight:normal; color:#222;">2025-09-16</span></div>
-                    </div>
+                    <span style="font-weight:700; color:#222; margin-bottom:2px;"><span>Nr. Fature:</span> <span id="invoiceNoDisplay" style="font-weight:normal; color:#222;">2025-001</span></span>
+                    <span style="font-weight:700; color:#222;"><span>Data:</span> <span id="invoiceDateDisplay" style="font-weight:normal; color:#222;">2025-09-16</span></span>
                 </div>
             </div>
         </div>
@@ -1292,31 +1289,31 @@
     <div class="card no-print client-toolbar-box" style="margin-bottom:6px;">
     <div class="client-toolbar-screenshot" style="display:flex; align-items:flex-start; gap:4px; background:#f7fafd; border:1px solid #e0e7ef; border-radius:8px; padding:2px 6px; width:100%; white-space:nowrap; flex-wrap:nowrap; overflow-x:hidden;">
         <div style="display:flex; flex-direction:column; gap:2px; min-width:179px;">
-            <label class="small required-field" style="margin-right:2px;">Kundenname</label>
-            <input id="clientName" type="text" placeholder="z.B. Max Mustermann" class="client-field" style="width:179px;">
-            <span id="clientNameError" style="display:none; color:#d32f2f; font-size:11px; margin-top:2px;">Bitte dieses Feld ausfüllen!</span>
+            <label class="small required-field" style="margin-right:2px;">Emri i klientit</label>
+            <input id="clientName" type="text" placeholder="P.sh. John Doe" class="client-field" style="width:179px;">
+            <span id="clientNameError" style="display:none; color:#d32f2f; font-size:11px; margin-top:2px;">Ju lutem plotësoni këtë fushë!</span>
         </div>
         <div style="display:flex; flex-direction:column; gap:2px; min-width:179px;">
-            <label class="small" style="margin-right:2px;">Adresse</label>
-            <input id="clientAddress" type="text" placeholder="Kundenadresse" class="client-field" style="width:179px;">
+            <label class="small" style="margin-right:2px;">Adresa</label>
+            <input id="clientAddress" type="text" placeholder="Adresa e klientit" class="client-field" style="width:179px;">
         </div>
         <div style="display:flex; flex-direction:column; gap:2px; min-width:140px;">
-            <label class="small" style="margin-right:2px;">Telefonnummer</label>
-            <input id="clientPhone" type="text" placeholder="z.B. 0123 456789" class="client-field" style="width:140px;">
+            <label class="small" style="margin-right:2px;">Numri i telefonit</label>
+            <input id="clientPhone" type="text" placeholder="P.sh. 0123 456789" class="client-field" style="width:140px;">
         </div>
         <div style="display:flex; flex-direction:column; gap:2px; min-width:191px;">
-            <label class="small" style="margin-right:2px;">E-Mail</label>
-            <input id="clientEmail" type="text" placeholder="z.B. kunde@example.com" class="client-field" style="width:191px;">
+            <label class="small" style="margin-right:2px;">Email</label>
+            <input id="clientEmail" type="text" placeholder="P.sh. klient@example.com" class="client-field" style="width:191px;">
         </div>
         <div style="display:flex; flex-direction:column; gap:2px; min-width:115px;">
-            <label class="small required-field" style="margin-left:8px; margin-right:2px;">Rechnungsnr.</label>
+            <label class="small required-field" style="margin-left:8px; margin-right:2px;">Nr. Fature</label>
             <input id="invoiceNo" type="text" value="2025-001" class="client-field" style="width:115px;">
         </div>
         <div style="display:flex; flex-direction:column; gap:2px; min-width:140px;">
-            <label class="small required-field" style="margin-left:6px; margin-right:2px;">Datum</label>
+            <label class="small required-field" style="margin-left:6px; margin-right:2px;">Data</label>
             <input id="invoiceDate" type="date" class="client-field" style="width:140px;">
         </div>
-    <button id="clearClientToolbar" type="button" style="align-self:flex-end; margin-left:10px; padding:4px 14px; border-radius:6px; border:1px solid #e0e7ef; background:#fff; color:#2563eb; font-weight:600; cursor:pointer;">Leeren</button>
+        <button id="clearClientToolbar" type="button" style="align-self:flex-end; margin-left:10px; padding:4px 14px; border-radius:6px; border:1px solid #e0e7ef; background:#fff; color:#2563eb; font-weight:600; cursor:pointer;">Pastro</button>
         </div>
         <style>
         .client-toolbar-screenshot input {
@@ -1376,20 +1373,9 @@
                 text-decoration: underline !important;
                 font-weight: 600 !important;
             }
-            .client-address-vertical .client-address-row.invoice-meta div {
+            .client-address-vertical .client-address-row.invoice-meta span {
                 color: #222 !important;
                 font-weight: 700 !important;
-                display: block !important;
-                margin-bottom: 2px !important;
-                padding-top: 2px !important;
-                padding-bottom: 2px !important;
-            }
-
-            @media print {
-                .client-address-vertical .client-address-row.invoice-meta div:nth-child(2) span:first-child::before {
-                    content: "                    "; /* 20 spaces */
-                    white-space: pre;
-                }
             }
             .client-address-vertical .client-address-row.invoice-meta span span {
                 font-weight: 400 !important;
@@ -1400,57 +1386,57 @@
 
     <div class="card no-print">
         <div class="filters" style="display:flex; align-items:center; gap:14px; flex-wrap:wrap;">
-            <label class="small" style="margin-right:2px;">1) LV wählen</label>
+            <label class="small" style="margin-right:2px;">1) Zgjidh LV</label>
             <select id="lvSelect" style="width:70px; min-width:40px; max-width:100px; margin-right:8px;"><option value="">-- LV --</option></select>
-            <label class="small" style="margin-right:2px;">2) Position</label>
-            <select id="pozSelect" style="width:70px; min-width:40px; max-width:100px; margin-right:8px;"><option value="">-- Position --</option></select>
+            <label class="small" style="margin-right:2px;">2) Pozition</label>
+            <select id="pozSelect" style="width:70px; min-width:40px; max-width:100px; margin-right:8px;"><option value="">-- Pozition --</option></select>
             <label class="small" style="margin-right:2px;">3) Kurztext</label>
             <div id="kurzSearchBox" style="display:inline-flex;align-items:center;gap:4px;">
-                <input id="kurzInput" type="text" placeholder="Text hier eingeben" style="width:110px; min-width:60px; max-width:160px;">
-                <button id="kurzPrevBtn" type="button" style="display:none;padding:2px 10px;border-radius:4px;border:1px solid #e0e7ef;background:#f7fafd;color:#2563eb;font-weight:600;cursor:pointer;">Zurück</button>
+                <input id="kurzInput" type="text" placeholder="Shkruaj tekstin këtu" style="width:110px; min-width:60px; max-width:160px;">
+                <button id="kurzPrevBtn" type="button" style="display:none;padding:2px 10px;border-radius:4px;border:1px solid #e0e7ef;background:#f7fafd;color:#2563eb;font-weight:600;cursor:pointer;">Kthehu</button>
                 <span id="kurzMatchInfo" style="display:none;font-size:13px;"></span>
-                <button id="kurzNextBtn" type="button" style="display:none;padding:2px 10px;border-radius:4px;border:1px solid #e0e7ef;background:#f7fafd;color:#2563eb;font-weight:600;cursor:pointer;">Weiter</button>
+                <button id="kurzNextBtn" type="button" style="display:none;padding:2px 10px;border-radius:4px;border:1px solid #e0e7ef;background:#f7fafd;color:#2563eb;font-weight:600;cursor:pointer;">Tjetra</button>
             </div>
-            <label class="small" style="margin-right:2px;">MwSt (%)</label>
+            <label class="small" style="margin-right:2px;">TVSH (%)</label>
             <input id="vatRate" type="number" value="20" min="0" max="100" style="width:50px; min-width:30px; max-width:60px;">
         </div>
     </div>
 
     <div class="card">
         <div style="display:flex; justify-content:space-between; align-items:center">
-        <div class="muted">Ausgewählter Artikel — Details</div>
+            <div class="muted">Artikulli i zgjedhur — Detajet</div>
             <div class="detail-actions no-print">
-                <button id="btnAddAllToInvoice" class="btn success">➕ Alle hinzufügen</button>
-                <button id="btnAddSelectedToInvoice" class="btn success">➕ Ausgewählte hinzufügen</button>
-                <button id="btnDeleteAllDetailRows" class="btn danger">🗑️ Alle löschen</button>
-                <button id="btnDeleteSelectedDetailRows" class="btn danger">🗑️ Ausgewählte löschen</button>
+                <button id="btnAddAllToInvoice" class="btn success">➕ Shto të Gjithë</button>
+                <button id="btnAddSelectedToInvoice" class="btn success">➕ Shto të Zgjedhur</button>
+                <button id="btnDeleteAllDetailRows" class="btn danger">🗑️ Fshij të Gjitha</button>
+                <button id="btnDeleteSelectedDetailRows" class="btn danger">🗑️ Fshij të Zgjedhurat</button>
             </div>
         </div>
         <table id="detailTable">
-            <thead><tr><th>LV</th><th>Position</th><th>Kurztext</th><th>ME</th><th>Menge</th><th>E-Preis</th><th>Aufmaß</th><th>Aktion</th></tr></thead>
+            <thead><tr><th>LV</th><th>Pozition</th><th>Kurztext</th><th>ME</th><th>Menge</th><th>E-Price</th><th>Aufmaß</th><th>Veprime</th></tr></thead>
             <tbody></tbody>
         </table>
     </div>
 
     <div class="card" id="invoiceArea">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px">
-            <div style="font-weight:700" class="invoice-title">Rechnung - Positionen</div>
+            <div style="font-weight:700" class="invoice-title">Fatura - Rreshtat</div>
             <div class="no-print invoice-actions">
-                <span class="muted" id="itemsCount">0 Artikel</span>
-                <button id="btnDeleteAllRows" class="btn danger">🗑️ Alle löschen</button>
-                <button id="btnDeleteSelectedRows" class="btn danger">🗑️ Ausgewählte löschen</button>
+                <span class="muted" id="itemsCount">0 artikuj</span>
+                <button id="btnDeleteAllRows" class="btn danger">🗑️ Fshij të Gjitha</button>
+                <button id="btnDeleteSelectedRows" class="btn danger">🗑️ Fshij të Zgjedhurat</button>
             </div>
         </div>
         <div class="no-print invoice-filters">
-            <label class="small">In Rechnung suchen:</label>
-            <input id="invoiceSearch" type="text" placeholder="Suche in LV, Position oder Kurztext...">
+            <label class="small">Kërko në Faturë:</label>
+            <input id="invoiceSearch" type="text" placeholder="Kërko në LV, Pozition ose Kurztext...">
         </div>
         <div class="invoice-table-container">
             <table id="invoiceTable">
                 <thead>
                     <tr>
-                        <th>Nr</th><th>LV</th><th>Position</th><th>Kurztext</th>
-                        <th>ME</th><th>Menge</th><th>E-Preis</th><th>Aufmaß</th><th class="no-print">Aktion</th>
+                        <th>Nr</th><th>LV</th><th>Pozition</th><th>Kurztext</th>
+                        <th>ME</th><th>Menge</th><th>E-Price</th><th>Aufmaß</th><th class="no-print">Veprime</th>
                     </tr>
                 </thead>
                 <tbody></tbody>
@@ -1458,16 +1444,16 @@
         </div>
         
         <div class="totals">
-            <div><span style="font-weight:700; margin-right:10px">Zwischensumme:</span><span id="subTotal" style="font-weight:700">0.00 €</span></div>
-            <div><span style="font-weight:700; margin-right:10px">MwSt (<span id="vatShow">20</span>%):</span><span id="vatAmount" style="font-weight:700">0.00 €</span></div>
-            <div><span style="font-weight:900; font-size:18px; margin-right:10px">Gesamtsumme:</span><span id="grandTotal" style="font-weight:900; font-size:18px">0.00 €</span></div>
+            <div><span style="font-weight:700; margin-right:10px">Nëntotali:</span><span id="subTotal" style="font-weight:700">0.00 €</span></div>
+            <div><span style="font-weight:700; margin-right:10px">TVSH (<span id="vatShow">20</span>%):</span><span id="vatAmount" style="font-weight:700">0.00 €</span></div>
+            <div><span style="font-weight:900; font-size:18px; margin-right:10px">Totali:</span><span id="grandTotal" style="font-weight:900; font-size:18px">0.00 €</span></div>
         </div>
     </div>
 
     <!-- Advanced: Added notes section (restored position, smaller font) -->
     <div class="card no-print notes-section" style="font-size:12px;">
-        <label class="small">Zusätzliche Hinweise (erscheint am Ende der Rechnung):</label>
-    <textarea id="invoiceNotes" placeholder="Fügen Sie Hinweise, Zahlungsbedingungen oder weitere Details hinzu..." style="font-size:9px;"></textarea>
+        <label class="small">Shënime shtesë (shfaqet në fund të faturës):</label>
+    <textarea id="invoiceNotes" placeholder="Shtoni shënime, kushte pagese ose detaje të tjera..." style="font-size:9px;"></textarea>
     </div>
 </div>
 
@@ -1500,11 +1486,11 @@ function validateRequiredFields() {
         valid = false;
     }
     if (!invoiceNo) {
-    alert('Bitte das Feld "Rechnungsnr." ausfüllen!');
+        alert('Ju lutem plotësoni fushën: Nr. Fature!');
         valid = false;
     }
     if (!invoiceDate) {
-    alert('Bitte das Feld "Datum" ausfüllen!');
+        alert('Ju lutem plotësoni fushën: Data!');
         valid = false;
     }
     return valid;
@@ -1710,7 +1696,7 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
 
     // Clear all data
     function clearAllData() {
-    if (confirm('Sind Sie sicher, dass Sie alle Daten löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.')) {
+        if (confirm('Jeni i sigurtë që dëshironi të pastroni të gjitha të dhënat? Ky veprim nuk mund të zhbëhet.')) {
             clearState();
             localStorage.removeItem('clientData');
             location.reload();
@@ -1740,10 +1726,10 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
 
     // Finalize and clear data
     function finalizeAndClear() {
-    if (confirm('Sind Sie sicher, dass Sie abschließen und alle Daten löschen möchten?')) {
+        if (confirm('Jeni i sigurtë që dëshironi të finalizoni dhe të pastroni të dhënat?')) {
             clearState();
             closePreview();
-            alert('Rechnung abgeschlossen und Daten gelöscht.');
+            alert('Fatura u finalizua dhe të dhënat u pastruan.');
         }
     }
 
@@ -1783,7 +1769,7 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
         if (!f) return;
 
         if (!f.type.match('image.*')) {
-            alert('Bitte laden Sie nur Bilddateien hoch!');
+            alert('Ju lutemi ngarkoni vetëm skedarë imazh!');
             fileInput.value = '';
             return;
         }
@@ -1802,12 +1788,12 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
             try {
                 localStorage.setItem('logoData', ev.target.result);
             } catch (e) {
-                alert('Logo kann nicht im localStorage gespeichert werden (möglicherweise zu groß).');
+                alert('Logo nuk mund të ruhet në localStorage (mund të jetë shumë e madhe).');
             }
             saveState();
         };
         reader.onerror = () => {
-            alert('Fehler beim Lesen der Datei!');
+            alert('Gabim gjatë leximit të skedarit!');
             fileInput.value = '';
         };
         reader.readAsDataURL(f);
@@ -1817,11 +1803,11 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
         const fileInput = e.target;
         const f = fileInput.files[0];
         if (!f) {
-            alert('Bitte wählen Sie eine Excel-Datei aus!');
+            alert('Ju lutemi zgjidhni një skedar Excel!');
             return;
         }
         if (!f.name.match(/\.(xlsx|xls)$/i)) {
-            alert('Bitte laden Sie nur Excel-Dateien hoch (.xlsx oder .xls)!');
+            alert('Ju lutemi ngarkoni vetëm skedarë Excel (.xlsx ose .xls)!');
             fileInput.value = '';
             return;
         }
@@ -1861,11 +1847,11 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
             redoStack = []; // Clear redo stack on new action
 
             populateLV();
-            alert('Import abgeschlossen — ' + allRows.length + ' Zeilen');
+            alert('Import u krye — ' + allRows.length + ' rreshta');
             updateUndoRedoButtons();
             saveState();
         } catch (err) {
-            alert('Fehler beim Verarbeiten der Excel-Datei: ' + err.message);
+            alert('Gabim gjatë përpunimit të skedarit Excel: ' + err.message);
             console.error(err);
             fileInput.value = '';
         }
@@ -2032,7 +2018,7 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
         tbody.innerHTML = '';
 
         if (items.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="8" class="muted">Kein Artikel ausgewählt</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" class="muted">Asnjë artikull i zgjedhur</td></tr>';
             return;
         }
 
@@ -2249,21 +2235,21 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
             updateItemsCount();
             updateUndoRedoButtons();
             saveState();
-            showToast('Alle Zeilen wurden zur Rechnung hinzugefügt!', 'success');
+            showToast('Të gjithë rreshtat u shtuan në faturë!', 'success');
         } else {
-            showToast('Keine Zeilen zum Hinzufügen!', 'warning');
+            showToast('Nuk ka rreshta për të shtuar!', 'warning');
         }
     });
 
     document.getElementById('btnAddSelectedToInvoice').addEventListener('click', () => {
         if (!currentItems.length) {
-            alert('Bitte wählen Sie Artikel aus, bevor Sie sie hinzufügen.');
+            alert('Zgjidhni artikujt para se ta shtoni.');
             return;
         }
 
         const selectedRows = document.querySelectorAll('#detailTable tbody .selected');
         if (selectedRows.length === 0) {
-            alert('Bitte wählen Sie mindestens einen Artikel zum Hinzufügen aus.');
+            alert('Zgjidhni të paktën një artikull për ta shtuar.');
             return;
         }
 
@@ -2292,11 +2278,11 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
         const tbody = document.querySelector('#invoiceTable tbody');
         const rows = tbody.querySelectorAll('tr');
         if (rows.length === 0) {
-            alert('Keine Zeilen zum Löschen.');
+            alert('Nuk ka rreshta për të fshirë.');
             return;
         }
 
-    if (confirm('Sind Sie sicher, dass Sie alle Zeilen löschen möchten?')) {
+        if (confirm('Jeni i sigurtë që dëshironi të fshini të gjitha rreshtat?')) {
             const deletedRows = Array.from(rows).map(tr => ({
                 rowIndex: parseInt(tr.dataset.idx),
                 aufmassValue: parseFloat(tr.querySelector('.aufmass').textContent.replace(' €', '')) || 0,
@@ -2317,18 +2303,18 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
             updateItemsCount();
             updateUndoRedoButtons();
             saveState();
-            alert('Alle Zeilen wurden gelöscht.');
+            alert('Të gjitha rreshtat u fshinë.');
         }
     });
 
     document.getElementById('btnDeleteSelectedRows').addEventListener('click', () => {
         const selectedRows = document.querySelectorAll('#invoiceTable tbody .selected');
         if (selectedRows.length === 0) {
-            alert('Bitte wählen Sie mindestens eine Zeile zum Löschen aus.');
+            alert('Zgjidhni të paktën një rresht për të fshirë.');
             return;
         }
 
-    if (confirm('Sind Sie sicher, dass Sie die ausgewählten Zeilen löschen möchten?')) {
+        if (confirm('Jeni i sigurtë që dëshironi të fshini rreshtat e zgjedhur?')) {
             const deletedRows = Array.from(selectedRows).map(tr => ({
                 rowIndex: parseInt(tr.dataset.idx),
                 aufmassValue: parseFloat(tr.querySelector('.aufmass').textContent.replace(' €', '')) || 0,
@@ -2349,13 +2335,13 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
             updateItemsCount();
             updateUndoRedoButtons();
             saveState();
-            alert('Ausgewählte Zeilen wurden gelöscht.');
+            alert('Rreshtat e zgjedhur u fshinë.');
         }
     });
 
     document.getElementById('btnUndo').addEventListener('click', () => {
         if (undoStack.length === 0) {
-            alert('Keine Aktionen zum Rückgängigmachen.');
+            alert('Nuk ka veprime për të zhbërë.');
             return;
         }
 
@@ -2378,7 +2364,7 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
                 recalcTotals();
                 updateItemsCount();
                 updateUndoRedoButtons();
-                alert('Letzte Aktion wurde rückgängig gemacht.');
+                alert('Veprimi i fundit u zhbë.');
                 saveState();
             }
         } else if (lastAction.action === 'deleteAllRows' || lastAction.action === 'deleteSelectedRows') {
@@ -2405,7 +2391,7 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
             recalcTotals();
             updateItemsCount();
             updateUndoRedoButtons();
-            alert('Letzte Aktion wurde rückgängig gemacht.');
+            alert('Veprimi i fundit u zhbë.');
             saveState();
         } else if (lastAction.action === 'addNew') {
             allRows = allRows.filter(item => item !== lastAction.item);
@@ -2421,7 +2407,7 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
 
     document.getElementById('btnRedo').addEventListener('click', () => {
         if (redoStack.length === 0) {
-            alert('Keine Aktionen zum Wiederholen.');
+            alert('Nuk ka veprime për të ribërë.');
             return;
         }
 
@@ -2432,7 +2418,7 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
             lastRedoAction.items.forEach(item => addToInvoice(item));
             updateItemsCount();
             updateUndoRedoButtons();
-            alert('Aktion wurde wiederholt.');
+            alert('Veprimi u ribë.');
             saveState();
         } else if (lastRedoAction.action === 'addSelected') {
             lastRedoAction.selectedIndices.forEach(idx => {
@@ -2643,11 +2629,11 @@ document.getElementById('btnDeleteSelectedDetailRows').addEventListener('click',
             }
         });
         if (document.querySelectorAll('#invoiceTable tbody tr').length === 0) {
-            alert('Fügen Sie mindestens einen Artikel zur Rechnung hinzu!');
+            alert('Shtoni të paktën një artikull në faturë!');
             isValid = false;
         }
         if (!isValid) {
-            alert('Bitte füllen Sie die Pflichtfelder des Kunden aus!');
+            alert('Plotësoni fushat e detyrueshme të klientit!');
         }
         return isValid;
     }
